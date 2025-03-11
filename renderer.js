@@ -13,15 +13,18 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    document.getElementById("selectFolder").addEventListener("click", async () => {
-        if (!window.electron) {
-            console.error("window.electron is not available.");
-            return;
-        }
+    document.getElementById("openDialog").addEventListener("click", () => {
+        window.electron.openDialog();
+    });
 
-        const folderPath = await window.electron.selectFolder();
-        document.getElementById("selectedFolder").textContent = folderPath
-            ? `Selected: ${folderPath}`
-            : "No folder selected";
+    document.getElementById("selectFolder").addEventListener("click", async () => {
+        const result = await window.electron.selectFolder();
+        if (result) {
+            document.getElementById("selectedFolder").textContent = `Selected: ${result.folderPath}`;
+            document.getElementById("fileCount").textContent = `Replay files found: ${result.fileCount}`;
+        } else {
+            document.getElementById("selectedFolder").textContent = "No folder selected";
+            document.getElementById("fileCount").textContent = "";
+        }
     });
 });

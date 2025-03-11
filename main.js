@@ -14,21 +14,70 @@ function createWindow() {
     win.loadFile('index.html');
 }
 
+// Handle folder selection and count .stormreplay files
 ipcMain.handle("select-folder", async () => {
-    // Define the target folder
-    const userProfile = process.env.USERPROFILE || process.env.HOME; // Get user home directory
+    const userProfile = process.env.USERPROFILE || process.env.HOME;
     const targetFolder = path.join(userProfile, "Documents", "Heroes of the Storm", "Accounts");
 
     // Check if the folder exists
     const defaultPath = fs.existsSync(targetFolder) ? targetFolder : undefined;
 
-    // Show the folder selection dialog
+    // Open folder selection dialog
     const result = await dialog.showOpenDialog({
         properties: ["openDirectory"],
-        defaultPath: defaultPath // Set the default folder if it exists
+        defaultPath: defaultPath
     });
 
-    return result.filePaths[0] || null;
+    if (!result.canceled && result.filePaths.length > 0) {
+        const selectedFolder = result.filePaths[0];
+
+        // Count .stormreplay files
+        let replayCount = 0;
+        try {
+            const files = fs.readdirSync(selectedFolder);
+            replayCount = files.filter(file => file.endsWith(".StormReplay")).length;
+        } catch (error) {
+            console.error("Error reading folder:", error);
+        }
+
+        return { folderPath: selectedFolder, fileCount: replayCount };
+    }
+
+    return null;
+});
+
+// Handle opening a separate dialog window
+ipcMain.on("open-dialog", () => {
+    const dialogWin = new BrowserWindow({
+        width: 400,
+        height: 300,
+        title: "New Dialog",
+        modal: true, // Keeps it on top
+        parent: BrowserWindow.getAllWindows()[0], // Attach to the main window
+        webPreferences: {
+            contextIsolation: true
+        }
+    });
+
+    dialogWin.loadURL(`data:text/html,
+        <html>
+        <head><title>Setup</title></head>
+        <body>
+        
+    <p>Welcome, traveler! Follow these steps to set up your stats visualization.</p>
+    <p>Use the buttons in the main window to point the app to your multiplayer replay folder. It should be full of .StormReplay files and will typically look like this:</p>
+    <p>...\Documents\Heroes Of The Storm\Accounts\\78865423\\2-Hero-1-1884623\Replays\Multiplayer</p>
+    <p>You'll notice the app will tell you how many total replays it detected in that folder. If that's more than 0, you probably did it right!</p>
+    <p>When that's the case, use the second button to trigger processing replay files. </p>
+    <p>This will only look at unprocessed replays and may take a while, especially the first time, depending on how many unprocessed replays there are.</p>
+    <p>During this process, your .StormReplay files will be analysed and a somewhat more readable version will be created in your replay folder.</p>
+    <p>Don't worry, these files are usually small as they're text only and won't bother anyone. </p>
+    <p>The app will then load the information contained in these files and visualize it using a variety of charts.</p>
+    <p>When done, the visualization will reload.</p>
+    <button onclick="window.close()">OK</button>
+        </body>
+        </html>
+    `);
 });
 
 app.whenReady().then(createWindow);

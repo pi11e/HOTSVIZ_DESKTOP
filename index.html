@@ -2,15 +2,21 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>HOTSVIZ - Visualizing your local Heroes Of The Storm replay statistics</title>
+    <title>Chart.js in Electron</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <h2>Sales Data</h2>
+    <button id="openDialog">Help / Setup</button>    
+    <button id="selectFolder">Select Replay Folder</button>
+    <p id="selectedFolder">(please select a folder first)</p>
+    <p id="fileCount">Replays found: 0</p> <!-- New element to display file count -->
+    
+    <button id="processReplays">Process Replays</button>
+    <p id="successLabel">0 replays processed. Visualization pending.</p>
+    <h2>Stats Review</h2>
     <canvas id="myChart"></canvas>
 
-    <button id="selectFolder">Select Replay Folder</button>
-    <p id="selectedFolder">No folder selected</p>
+    
 
     <script src="renderer.js"></script>
 </body>
