@@ -1,13 +1,12 @@
 //https://www.w3schools.com/nodejs/nodejs_mysql.asp
 //import mysql from 'mysql2/promise';
 
- import * as fs from 'fs';
+import * as fs from 'fs';
 
- import * as path from 'path';
- import sqlite3 from 'sqlite3';
+import * as path from 'path';
+import sqlite3 from 'sqlite3';
 
-
-
+import { ipcMain } from 'electron';
 
 var uniqueGamesJSON = [];
 const dataFolderPath = "./data/";
@@ -19,9 +18,9 @@ const queryForMapStats = "SELECT game_map, COUNT(*) AS total_games, SUM(CASE WHE
 const queryForRankedHeroes = "SELECT DISTINCT game_hero FROM uniqueGames WHERE game_mode = 'stormLeague' ORDER BY game_hero";
 const queryForRankedMaps = "SELECT DISTINCT game_map FROM uniqueGames WHERE game_mode = 'stormLeague' ORDER BY game_map";
 const queryForPartyWinrate = "SELECT game_winner, game_players FROM uniqueGames";
-const queryForHeatmap = fs.readFileSync('./heatmapquery.cfg', 'utf-8'); 
-const queryForLineChart = fs.readFileSync('./linechartquery.cfg', 'utf-8');
-const queryForNestedMap = fs.readFileSync('./nestedmapquery.cfg', 'utf-8');
+const queryForHeatmap = fs.readFileSync(dataFolderPath + 'heatmapquery.cfg', 'utf-8'); 
+const queryForLineChart = fs.readFileSync(dataFolderPath + 'linechartquery.cfg', 'utf-8');
+const queryForNestedMap = fs.readFileSync(dataFolderPath + 'nestedmapquery.cfg', 'utf-8');
 
 
 
@@ -84,6 +83,7 @@ async function queryDatabase(queryString)
             console.error("ERROR: " + err);
           }
       }
+
       else
       {
         console.log("Input operation successful.");
@@ -91,6 +91,8 @@ async function queryDatabase(queryString)
   });
   //await sleep(1000);
   fileDB.close();
+
+  
   
 }
 
@@ -274,8 +276,6 @@ CREATE TABLE uniqueGames (
 
 
 
-// rebuild gameData.json based on the blob of all joined unique games as json - not needed if we're building data based on the SQL database
-//fs.writeFileSync('./data/gameData.json', JSON.stringify(uniqueGamesJSON));
 
 
 
@@ -383,7 +383,7 @@ function resetDatabase()
 
 }
 
-export async function main()
+export async function initializeDatabase()
 {
       // RESET DATABASE AND INITIALIZE DATA
 

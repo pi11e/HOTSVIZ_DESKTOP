@@ -1,4 +1,8 @@
-document.addEventListener("DOMContentLoaded", () => {
+
+
+document.addEventListener("DOMContentLoaded", async () => 
+{
+    // SAMPLE CHART
     const ctx = document.getElementById('myChart').getContext('2d');
 
     new Chart(ctx, {
@@ -13,18 +17,40 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    // HANDLING OPEN DIALOG
     document.getElementById("openDialog").addEventListener("click", () => {
         window.electron.openDialog();
     });
 
+    
+
+    // ✅ Request the file contents from main.js
+    const dataPath = await window.electron.getDataPathConfig();
+
+    // ✅ Display the result inside the <p> element
+    document.getElementById("selectedFolder").textContent = dataPath;
+
+    // HANDLING SELECT FOLDER
     document.getElementById("selectFolder").addEventListener("click", async () => {
         const result = await window.electron.selectFolder();
         if (result) {
-            document.getElementById("selectedFolder").textContent = `Selected: ${result.folderPath}`;
+            document.getElementById("selectedFolder").textContent = result.folderPath;
             document.getElementById("fileCount").textContent = `Replay files found: ${result.fileCount}`;
         } else {
             document.getElementById("selectedFolder").textContent = "No folder selected";
             document.getElementById("fileCount").textContent = "";
         }
     });
+
+    // HANDLING PROCESS REPLAYS
+    document.getElementById("processReplays").addEventListener("click", async () =>     
+    {
+        var defaultText = "0 replays processed. Visualization pending."
+
+        console.log("process replays clicked inside renderer");
+        window.electron.processReplays();
+        
+    });
+
+    
 });

@@ -2,16 +2,23 @@ const { app, BrowserWindow, dialog, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs'); // File system module
 
+const hotsdb = require('./hotsviz_src/hotsdb.js');
+
 function createWindow() {
     const win = new BrowserWindow({
         width: 800,
         height: 600,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
-            contextIsolation: true
+            contextIsolation: true,
+            devTools: true
         }
     });
     win.loadFile('index.html');
+
+    // open dev tools by default
+    win.webContents.openDevTools();
+
 }
 
 // Handle folder selection and count .stormreplay files
@@ -89,6 +96,23 @@ ipcMain.on("open-dialog", () => {
         </body>
         </html>
     `);
+});
+
+// handle processReplays button
+ipcMain.on("process-replays", () => {
+    console.log("process replay button pressed in main.js");
+    hotsdb.initializeDatabase();
+});
+
+// load filepath from data_path.cfg if it exists
+ipcMain.handle("get-data-path-config", async () => {
+    const filePath = path.join(__dirname, "data", "data_path.cfg");
+
+    if (fs.existsSync(filePath)) {
+        return fs.readFileSync(filePath, "utf-8"); // Read and return contents
+    } else {
+        return "No path selected"; // Default message if file doesn't exist
+    }
 });
 
 app.whenReady().then(createWindow);
