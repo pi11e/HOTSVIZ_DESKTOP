@@ -14,10 +14,17 @@
     <button id="processReplays">Process Replays</button>
     <p id="successLabel">0 replays processed. Visualization pending.</p>
     <h2>Stats Review</h2>
-    <canvas id="myChart"></canvas>
-
+    
+    <div style="width: 800px;"><canvas id="myChart"></canvas></div>
+    <div style="width: 800px;"><canvas id="barchart"></canvas></div>
+    <div style="width: 800px;"><canvas id="herochart"></canvas></div>
+    <div style="width: 800px;"><canvas id="piechart"></canvas></div>
+    <div style="width: 1400px;"><canvas id="heatmap"></canvas></div>
+    <div style="width: 800px;"><canvas id="linechart"></canvas></div>
+    <div style="width: 800px;"><canvas id="partywinrate"></canvas></div>
     
 
-    <script src="renderer.js"></script>
+    <script type=module src="renderer.js"></script>
+    <script type=module src="./hotsviz_src/test.js"></script>
 </body>
 </html>

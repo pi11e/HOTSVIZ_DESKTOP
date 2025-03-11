@@ -31,6 +31,9 @@ ipcMain.handle("select-folder", async () => {
     if (!result.canceled && result.filePaths.length > 0) {
         const selectedFolder = result.filePaths[0];
 
+        const configPath = path.join(__dirname, "data", "data_path.cfg");
+        
+
         // Count .stormreplay files
         let replayCount = 0;
         try {
@@ -38,6 +41,14 @@ ipcMain.handle("select-folder", async () => {
             replayCount = files.filter(file => file.endsWith(".StormReplay")).length;
         } catch (error) {
             console.error("Error reading folder:", error);
+        }
+
+        // Write selected folder path to "/data/data_path.cfg"
+        try {
+            fs.writeFileSync(configPath, selectedFolder, "utf-8");
+            console.log(`Saved path to config: ${selectedFolder}`);
+        } catch (error) {
+            console.error("Error writing to config file:", error);
         }
 
         return { folderPath: selectedFolder, fileCount: replayCount };
