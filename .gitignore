@@ -1,2 +1,8 @@
 node_modules/
 dist/
+data/queryForPartyWinrateResult.json
+data/queryForNestedMapResult.json
+data/queryForMapStatsResult.json
+data/queryForLineChartResult.json
+data/queryForHeroStatsResult.json
+data/gameData_sqlite.db
