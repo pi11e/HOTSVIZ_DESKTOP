@@ -52,5 +52,79 @@ document.addEventListener("DOMContentLoaded", async () =>
         
     });
 
+    // expose main.js chart creation and call it here (then in main forward the call to hotsviz.js)
     
+    
+    
+    /*
+    const chartConfig = { type: "bar", data: [10, 20, 30] }; // Example config
+
+    window.electron.getChartData(chartConfig).then(response => {
+    console.log("Main process responded:", response);
+    }).catch(error => {
+    console.error("Error:", error);
+    });
+    */
+
+
+
+    // TO DO:
+    // instead of passing the config here, call getChartData multiple times to get the data for each chart type
+    // then create the new chart using the corresponding chartData
+    // ex.
+    //  var barChartData = window.electron.getChartData('barChart').then(response => {
+    //  console.log("Main process responded:", response);
+
+        //  now create the new chart using the data from response
+        //const ctx = document.getElementById('barChart').getContext('2d'); // or just get the canvas
+        //new Chart(ctx, {type:bar, data:response});
+
+
+    //  }).catch(error => {
+    //  console.error("Error:", error);
+    //  });
+
+    // Chart Types:
+    // 1. BarChart that displays winrate over the last X games 
+    // 2. PieChart that displays top hero games
+    // 3. 
+
+    console.log("creating charts.");
+        
+    // List of chart names
+    const chartNames = [
+        "barchart",
+        "herochart",
+        "piechart",
+        "heatmap",
+        "linechart",
+        "partysizechart"
+    ];
+
+    // Loop through and create each chart
+    chartNames.forEach(createChart);
+
+
 });
+
+function createChart(chartName) 
+{
+    console.log("creating chart " + chartName);
+
+    window.electron.getChartData(chartName).then(response => 
+        {
+            var result = JSON.parse(response);
+    
+            // render chart based on data from response
+            const ctx = document.getElementById(chartName).getContext('2d');
+    
+            new Chart(ctx, {
+                type: result.type,
+                data: result.data,
+                options: result.options
+            });
+            
+        }).catch(error => {
+        console.error(`Error loading ${chartName}:`, error);
+        });
+}

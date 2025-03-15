@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs'); // File system module
 
 const hotsdb = require('./hotsviz_src/hotsdb.js');
+const hotsdata = require('./hotsviz_src/hotsdata.js');
 
 function createWindow() {
     const win = new BrowserWindow({
@@ -113,6 +114,36 @@ ipcMain.handle("get-data-path-config", async () => {
     } else {
         return "No path selected"; // Default message if file doesn't exist
     }
+});
+
+ipcMain.handle("get-chart-data", (event, config) => 
+{
+
+    console.log("calling getChartData with parameter:", config);
+    //return "Chart created successfully"; // Optional response
+    let response;
+    
+
+    if(hotsdata.isValidChartType(config))
+    {
+        //later, this should come from here
+        response = hotsdata.createResponseForChartType(config);
+        
+        // testing
+        
+    }
+    else
+    {
+        response = "ERROR: invalid chart type requested: " + config;
+    }
+    
+    // returning the response as-is results in "An object could not be cloned" error as the response may contain complex
+    // objects that themselves contain objects. one option to fix this is by serializing and un-serializing using 
+    // JSON.stringify and JSON.parse on the other end.
+
+    //return response;
+    return JSON.stringify(response);
+
 });
 
 app.whenReady().then(createWindow);

@@ -6,20 +6,23 @@ options and data to them.
 
 */
 
-import Chart from 'chart.js/auto';
+// not needed - chart.js should already be loaded via index.html 
+//import Chart from 'chart.js/auto';
 
-import * as fs from'fs';
+//import * as fs from'fs'; // instead of importing fs here where you can't use it, resolve FS operations in main.js where it is available, then call functions exported here with the result
+//const fs = require('fs');
 
-import { MatrixController, MatrixElement } from 'chartjs-chart-matrix';
+//import { MatrixController, MatrixElement } from '../node_modules/chartjs-chart-matrix';
+const {MatrixController, MatrixElement} = require('chartjs-chart-matrix');
 
 import * as hotsdata from './hotsdata.js'
 
 
-(async function() 
+export async function createBarChartFromHeroStats(queryForHeroStatsResult, queryForMapStatsResult)
 {
+  const heroStats = JSON.parse(queryForHeroStatsResult);
+  const mapStats = JSON.parse(queryForMapStatsResult);
 
-  var heroStats = JSON.parse(fs.readFileSync('./data/queryForHeroStatsResult.json', 'utf-8'));
-  // herowinrate is used to display global hero winrate on x axis labels
   var heroWinrate = new Map();
   heroStats.forEach(element => 
     {
@@ -27,7 +30,6 @@ import * as hotsdata from './hotsdata.js'
   });
 
   // mapwinrate is used to display global map winrate on y axis labels
-  var mapStats = JSON.parse(fs.readFileSync('./data/queryForMapStatsResult.json', 'utf-8'));
   var mapWinrate = new Map();
   mapStats.forEach(element => 
     {
@@ -35,13 +37,6 @@ import * as hotsdata from './hotsdata.js'
   });
 
   
-
-  // BEGIN BAR CHART
-
-  
-  
-
-  // now we ignore all of the above and create the data from SQL instead.
   // we need a labels[] that contains all the map names
   // we need a wins[] and losses[] that contain the total wins / losses for the map
   let barChartData = hotsdata.generateDataForChartType("barchart");
@@ -54,7 +49,9 @@ import * as hotsdata from './hotsdata.js'
 
   const winRate = Math.round(totalWins *10000 / totalGames) / 100;
 
-  new Chart(
+  // with all the data in hand, now we can create a new bar chart
+
+  return new Chart(
     document.getElementById('barchart'),
     {
       type: 'bar',
@@ -92,6 +89,19 @@ import * as hotsdata from './hotsdata.js'
       }
     }
   );
+
+}
+
+// OLD HOTSVIZ.JS - port this stuff then delete
+
+(async function() 
+{
+ 
+
+  // BEGIN BAR CHART
+
+
+  
 
   // END BAR CHART
   let pieChartData = hotsdata.generateDataForChartType("piechart"); // used in both pie and hero charts :S

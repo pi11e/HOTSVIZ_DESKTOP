@@ -12,6 +12,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "chartjs-chart-matrix": "^2.0.1",
     "electron": "^35.0.1",
     "sqlite3": "^5.1.7"
   }

@@ -9,36 +9,42 @@ the Chart.js charts used by the visualizer (hotsviz) to render player statistics
 
 */
 
+export function isValidChartType(chartType) {
+    const validChartTypes = new Set([
+        "heatmap", "piechart", "barchart", 
+        "linechart", "herochart", "nestedmap", "partywinrate"
+    ]);
+
+    return validChartTypes.has(chartType);
+}
 
 
-
-export function generateDataForChartType(chartType)
+export function createResponseForChartType(chartType)
 {
-    console.log("Generating data for chart type " + chartType);
+    console.log("creating response for chart type " + chartType);
 
     var dataSet = undefined;
 
     switch (chartType) {
-        case "heatmap":
-            // generate & return heat map data
+        case "heatmap": // TO DO: refactor 
             dataSet = generateHeatmapDataSet2();
             break;
-        case "piechart":
+        case "piechart":// TO DO: refactor 
             dataSet = generatePieChartDataSet();
             break;
         case "barchart":
-            dataSet = generateBarChartDataSet();
+            dataSet = createBarChartResponse();
             break;
-        case "linechart":
+        case "linechart":// TO DO: refactor 
             dataSet = generateLineChartDataSet();
             break;
-        case "herochart":
+        case "herochart":// TO DO: refactor 
             dataSet = generateHeroChartDataSet();
             break;
-        case "nestedmap":
+        case "nestedmap":// TO DO: refactor 
             dataSet = generateNestedMapDataSet();
             break;
-        case "partywinrate":
+        case "partywinrate":// TO DO: refactor 
             dataSet = generatePartyWinrateDataSet();
             break;
         default:
@@ -76,6 +82,57 @@ function generateNestedMapDataSet()
     });
 
     return mapOfMaps;
+}
+
+function createBarChartResponse()
+{
+    const response = {type:undefined, data:undefined, options:undefined};
+    let barChartData = generateBarChartDataSet();
+
+    let lossData = barChartData.loss;
+    let winData = barChartData.wins;
+
+    const totalGames = lossData.concat(winData).reduce((partialSum, a) => partialSum + a, 0);
+    const totalWins = winData.reduce((partialSum, a) => partialSum + a, 0);
+
+    const winRate = Math.round(totalWins *10000 / totalGames) / 100;
+
+    response.type = 'bar';
+    response.data = {
+        labels: barChartData.labels,
+        datasets: [
+            {
+              label: 'Defeat',
+              data: lossData,
+              backgroundColor: 'rgb(255, 99, 132)' //red
+            },
+            {
+              label: 'Win',
+              data: winData,
+              backgroundColor: 'rgb(75, 192, 192)' // green
+            }
+          ]
+        };
+    response.options = {
+        plugins: {
+          title : {
+            display: true,
+            text: 'Winrate over the last '+totalGames+' ranked games: ' + winRate + "%" 
+          }
+        },
+        responsive: true,
+        scales:{
+          x: { stacked: true, ticks: {callback : function (value, index, ticks) 
+            {
+              var totalGamesOnMap = lossData[value] + winData[value];
+              var winrateOnMap = Math.round(winData[value]/totalGamesOnMap*100);
+              return barChartData.labels[value] + ": " + winrateOnMap + "%"
+            }}},y: { stacked: true}
+        }
+      };
+
+
+    return response;
 }
 
 function generateBarChartDataSet()
