@@ -12,7 +12,7 @@ the Chart.js charts used by the visualizer (hotsviz) to render player statistics
 export function isValidChartType(chartType) {
     const validChartTypes = new Set([
         "heatmap", "piechart", "barchart", 
-        "linechart", "herochart", "nestedmap", "partywinrate"
+        "linechart", "herochart", "partysizechart"
     ]);
 
     return validChartTypes.has(chartType);
@@ -26,26 +26,23 @@ export function createResponseForChartType(chartType)
     var dataSet = undefined;
 
     switch (chartType) {
-        case "heatmap": // TO DO: refactor 
-            dataSet = generateHeatmapDataSet2();
+        case "heatmap":
+            dataSet = createHeatMapResponse();
             break;
-        case "piechart":// TO DO: refactor 
-            dataSet = generatePieChartDataSet();
+        case "piechart": // done and working
+            dataSet = createPieChartResponse();
             break;
-        case "barchart":
+        case "barchart": // done and working
             dataSet = createBarChartResponse();
             break;
-        case "linechart":// TO DO: refactor 
-            dataSet = generateLineChartDataSet();
+        case "linechart": // done and working
+            dataSet = createLineChartResponse();
             break;
-        case "herochart":// TO DO: refactor 
-            dataSet = generateHeroChartDataSet();
+        case "herochart": // done and working
+            dataSet = createHeroChartResponse();
             break;
-        case "nestedmap":// TO DO: refactor 
-            dataSet = generateNestedMapDataSet();
-            break;
-        case "partywinrate":// TO DO: refactor 
-            dataSet = generatePartyWinrateDataSet();
+        case "partysizechart": // done and working
+            dataSet = createPartySizeChartResponse();
             break;
         default:
             break;
@@ -53,6 +50,124 @@ export function createResponseForChartType(chartType)
 
     console.log(dataSet);
     return dataSet;
+}
+
+function createHeatMapResponse()
+{
+    const response = {type:undefined, data:undefined, options:undefined};
+    var heatMapData = generateHeatmapDataSet2();
+    var nestedMapDataSet = generateNestedMapDataSet();    
+    // TO DO: Port chart config (type, data and options) from hotsviz.js 
+
+    return response;
+}
+
+function createPieChartResponse()
+{
+    const response = {type:undefined, data:undefined, options:undefined};
+    var pieChartData = generatePieChartDataSet();
+
+    response.type = 'doughnut';
+    response.data = {
+        labels: pieChartData.labels, // array[36] = ["Raynor", "Tracer", ...]
+        datasets: [
+            {
+                label: 'Games',
+                data: pieChartData.data // array[36] = [4,35,...]
+            }
+        ]
+    }; 
+    response.options = {
+      plugins: {
+        title : {
+          display: true,
+          text: "Total ranked games per hero"
+        }
+      }};
+
+
+    return response;
+}
+
+function createLineChartResponse()
+{
+    const response = {type:undefined, data:undefined, options:undefined};
+    var lineChartData = generateLineChartDataSet();
+
+    response.type = 'line';
+    response.data = lineChartData;
+    response.options = {
+        responsive: true,
+        plugins: {
+          legend: {
+            position: 'top',
+          },
+          title: {
+            display: true,
+            text: 'daily vs. aggregate winrate'
+          }
+        },
+        scales: {
+          y: {
+            position: 'left'
+          },
+          y1: {
+            position: 'right',
+            max : 0.6,
+            min : 0.4
+          },
+          x:
+          {
+            ticks: {
+              callback : function (value, index, ticks)
+              {
+                return lineChartData.labels[value].substring(0,10);
+              }
+            }
+          }
+        }
+      };
+
+    return response;
+}
+
+function createPartySizeChartResponse()
+{
+    const response = {type:undefined, data:undefined, options:undefined};
+    var partyWinrateData = generatePartyWinrateDataSet();
+
+    response.type = 'bar';
+
+    response.data = {
+        labels: [1,2,3,4,5],//xAxisLabels,
+        datasets: [
+          {
+            label: 'Defeats',
+            data: partyWinrateData[1],
+            backgroundColor: 'rgb(255, 99, 132)' //red
+          },
+          {
+            label: 'Wins',
+            data: partyWinrateData[0],
+            backgroundColor: 'rgb(75, 192, 192)' // green
+          }
+        ]
+      };
+      response.options = {
+        plugins: {
+          title : {
+            display: true,
+            text: 'Winrate per party size'
+          }
+        },
+        responsive: true,
+        scales:{
+          x: { stacked: true},y: { stacked: true}
+        }
+      };
+    
+
+    return response;
 }
 
 function generateNestedMapDataSet()
@@ -153,6 +268,45 @@ function generateBarChartDataSet()
 
     //console.log("bar chart = " + barChartData);
     return barChartData;
+}
+
+function createHeroChartResponse()
+{
+    const response = {type:undefined, data:undefined, options:undefined};
+    let pieChartData = generatePieChartDataSet();
+    let heroChartData = generateHeroChartDataSet();
+
+    response.type = 'bar';
+    response.data = {
+        labels: heroChartData.labels, // array[36] = ["Raynor", "Tracer", ...]
+        datasets: [
+            {
+                label: 'winrate',
+                data: heroChartData.data // array[36] = [4,35,...]
+            }
+        ]
+    }; 
+    response.options = {
+      plugins: {
+        title : {
+          display: true,
+          text: "Winrate in % per hero with more than 2 games"
+        }
+      },
+      scales: {
+        x: {
+          ticks: {
+            callback : function (value, index, ticks)
+            {
+              // show # of total games on the ticks
+              return heroChartData.labels[value] + ": " + pieChartData.data[value];
+            }
+          }
+        }
+      }
+    };
+
+    return response;
 }
 
 function generateHeroChartDataSet()

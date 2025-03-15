@@ -2,20 +2,6 @@
 
 document.addEventListener("DOMContentLoaded", async () => 
 {
-    // SAMPLE CHART
-    const ctx = document.getElementById('myChart').getContext('2d');
-
-    new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: ['January', 'February', 'March', 'April'],
-            datasets: [{
-                label: 'Sales ($)',
-                data: [500, 700, 400, 900],
-                backgroundColor: ['red', 'blue', 'green', 'orange']
-            }]
-        }
-    });
 
     // HANDLING OPEN DIALOG
     document.getElementById("openDialog").addEventListener("click", () => {
