@@ -38,6 +38,24 @@ document.addEventListener("DOMContentLoaded", async () =>
         
     });
 
+    document.getElementById("reloadVisualization").addEventListener("click", async () =>     
+        {
+            console.log("creating charts.");
+        
+            // List of chart names
+            const chartNames = [
+                "barchart",
+                "herochart",
+                "piechart",
+                "heatmap",
+                "linechart",
+                "partysizechart"
+            ];
+
+            // Loop through and create each chart
+            chartNames.forEach(createChart);           
+        });
+
     // expose main.js chart creation and call it here (then in main forward the call to hotsviz.js)
     
     
@@ -75,20 +93,7 @@ document.addEventListener("DOMContentLoaded", async () =>
     // 2. PieChart that displays top hero games
     // 3. 
 
-    console.log("creating charts.");
-        
-    // List of chart names
-    const chartNames = [
-        "barchart",
-        "herochart",
-        "piechart",
-        "heatmap",
-        "linechart",
-        "partysizechart"
-    ];
-
-    // Loop through and create each chart
-    chartNames.forEach(createChart);
+    
 
 
 });

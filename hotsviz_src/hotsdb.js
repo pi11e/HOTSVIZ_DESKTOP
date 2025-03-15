@@ -9,8 +9,8 @@ import sqlite3 from 'sqlite3';
 import { ipcMain } from 'electron';
 
 var uniqueGamesJSON = [];
-const dataFolderPath = "./data/";
-const replayFilePath = fs.readFileSync(dataFolderPath + "data_path.cfg", "utf-8");
+var dataFolderPath = undefined;
+var replayFilePath = undefined;
 
 
 const queryForHeroStats = "SELECT game_hero, COUNT(*) AS total_games, SUM(CASE WHEN game_winner = 1 THEN 1 ELSE 0 END) AS total_wins, CAST(SUM(CASE WHEN game_winner = 1 THEN 1 ELSE 0 END) AS FLOAT) / COUNT(*) AS win_rate FROM uniqueGames WHERE game_mode = 'stormLeague' GROUP BY game_hero ORDER BY total_games DESC LIMIT 0, 1000";
@@ -18,9 +18,9 @@ const queryForMapStats = "SELECT game_map, COUNT(*) AS total_games, SUM(CASE WHE
 const queryForRankedHeroes = "SELECT DISTINCT game_hero FROM uniqueGames WHERE game_mode = 'stormLeague' ORDER BY game_hero";
 const queryForRankedMaps = "SELECT DISTINCT game_map FROM uniqueGames WHERE game_mode = 'stormLeague' ORDER BY game_map";
 const queryForPartyWinrate = "SELECT game_winner, game_players FROM uniqueGames";
-const queryForHeatmap = fs.readFileSync(dataFolderPath + 'heatmapquery.cfg', 'utf-8'); 
-const queryForLineChart = fs.readFileSync(dataFolderPath + 'linechartquery.cfg', 'utf-8');
-const queryForNestedMap = fs.readFileSync(dataFolderPath + 'nestedmapquery.cfg', 'utf-8');
+var queryForHeatmap = undefined;
+var queryForLineChart = undefined;
+var queryForNestedMap = undefined;
 
 
 
@@ -402,6 +402,16 @@ export async function initializeDatabase()
       queryPartyWinrate();
 
 
+}
+
+export function initializeData(param_dataFolderPath)
+{
+  dataFolderPath = param_dataFolderPath;
+  replayFilePath = fs.readFileSync(dataFolderPath + "data_path.cfg", "utf-8");
+
+  queryForHeatmap = fs.readFileSync(dataFolderPath + 'heatmapquery.cfg', 'utf-8'); 
+  queryForLineChart = fs.readFileSync(dataFolderPath + 'linechartquery.cfg', 'utf-8');
+  queryForNestedMap = fs.readFileSync(dataFolderPath + 'nestedmapquery.cfg', 'utf-8');
 }
 
 //main();

@@ -2,7 +2,6 @@ const { app, BrowserWindow, dialog, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs'); // File system module
 
-const hotsdb = require('./hotsviz_src/hotsdb.js');
 const hotsdata = require('./hotsviz_src/hotsdata.js');
 
 function createWindow() {
@@ -15,6 +14,8 @@ function createWindow() {
             devTools: true
         }
     });
+
+
     win.loadFile('index.html');
 
     // open dev tools by default
@@ -91,8 +92,8 @@ ipcMain.on("open-dialog", () => {
     <p>This will only look at unprocessed replays and may take a while, especially the first time, depending on how many unprocessed replays there are.</p>
     <p>During this process, your .StormReplay files will be analysed and a somewhat more readable version will be created in your replay folder.</p>
     <p>Don't worry, these files are usually small as they're text only and won't bother anyone. </p>
-    <p>The app will then load the information contained in these files and visualize it using a variety of charts.</p>
-    <p>When done, the visualization will reload.</p>
+    <p>You may notice a brief slow down of your machine as the information is processed.</p>
+    <p>When it has passed, click reload visualization to show the charts.</p>
     <button onclick="window.close()">OK</button>
         </body>
         </html>
@@ -102,8 +103,33 @@ ipcMain.on("open-dialog", () => {
 // handle processReplays button
 ipcMain.on("process-replays", () => {
     console.log("process replay button pressed in main.js");
-    hotsdb.initializeDatabase();
+    
+    
+    loadHotsDB();
 });
+
+async function loadHotsDB() 
+{
+    const hotsdb = await import('./hotsviz_src/hotsdb.js');
+
+    const dataPath = "./data/";
+    const dataPath_dist = "./resources/app/data/";
+
+    if(app.isPackaged)
+    {
+        hotsdb.initializeData(dataPath_dist);
+    }
+    else
+    {
+        hotsdb.initializeData(dataPath);
+    }
+
+    hotsdb.initializeDatabase();
+
+
+
+    
+}
 
 // load filepath from data_path.cfg if it exists
 ipcMain.handle("get-data-path-config", async () => {
@@ -145,5 +171,15 @@ ipcMain.handle("get-chart-data", (event, config) =>
     return JSON.stringify(response);
 
 });
+
+async function loadHotsData(chartType)
+{
+    const hotsData = await import('./hotsviz_src/hotsdata.js');
+    
+    // implement async import / returning response here
+}
+
+app.setPath('userData', path.join(app.getPath('appData'), 'HOTSVIZ'));
+
 
 app.whenReady().then(createWindow);

@@ -9,6 +9,8 @@ the Chart.js charts used by the visualizer (hotsviz) to render player statistics
 
 */
 
+
+
 export function isValidChartType(chartType) {
     const validChartTypes = new Set([
         "heatmap", "piechart", "barchart", 
@@ -172,7 +174,8 @@ function createPartySizeChartResponse()
 
 function generateNestedMapDataSet()
 {
-    const jsonResponse = JSON.parse(fs.readFileSync('./data/queryForNestedMapResult.json', 'utf-8'));
+    
+    const jsonResponse = parseQueryJSON("queryForNestedMapResult.json");
 
         // Initialize the nested map structure
     const mapOfMaps = new Map();
@@ -255,7 +258,8 @@ function generateBarChartDataSet()
     var barChartData = { labels : [], wins : [], loss : []};
 
     // read response
-    var jsonResponse = JSON.parse(fs.readFileSync('./data/queryForMapStatsResult.json', 'utf-8'));
+    const jsonResponse = parseQueryJSON("queryForMapStatsResult.json");
+
     Array.from(jsonResponse).forEach(element => 
     {
         barChartData.labels.push(element.game_map);
@@ -315,7 +319,9 @@ function generateHeroChartDataSet()
     var heroChartData = { labels : [], data : []};
 
     // read response
-    var jsonResponse = JSON.parse(fs.readFileSync('./data/queryForHeroStatsResult.json', 'utf-8'));
+    
+    const jsonResponse = parseQueryJSON("queryForHeroStatsResult.json");
+
     Array.from(jsonResponse).forEach(element => 
         {
             //console.log("checking hero " + JSON.stringify(element));
@@ -340,8 +346,8 @@ function generatePieChartDataSet()
     // serve and adjust the datasets here
     var pieChartData = { labels : [], data : []};
 
-    // read response
-    var jsonResponse = JSON.parse(fs.readFileSync('./data/queryForHeroStatsResult.json', 'utf-8'));
+    const jsonResponse = parseQueryJSON("queryForHeroStatsResult.json");
+
     Array.from(jsonResponse).forEach(element => 
         {
             
@@ -358,7 +364,7 @@ function generatePieChartDataSet()
 function generateHeatmapDataSet()
 {
     // REAL DATA:
-    var jsonResponse = JSON.parse(fs.readFileSync('./data/queryForHeatmapResult.json', 'utf-8'));
+    const jsonResponse = parseQueryJSON("queryForHeatmapResult.json")
 
     // @TODO: process the real data and return a useful dataset.
 
@@ -425,8 +431,8 @@ function generateHeatmapDataSet2()
     // as an alternative to the original monstrous query, build a data structure that looks like this from the nested map obtained from generateNestedMapDataSet()
     const nestedMap = generateNestedMapDataSet();
 
-    const rankedMaps = JSON.parse(fs.readFileSync('./data/queryForRankedMapsResult.json', 'utf-8'));
-    const rankedHeroes = JSON.parse(fs.readFileSync('./data/queryForRankedHeroesResult.json', 'utf-8'));
+    const rankedMaps = parseQueryJSON("queryForRankedMapsResult.json");
+    const rankedHeroes = parseQueryJSON("queryForRankedHeroesResult.json");
 
     var dataSet = [];
     
@@ -471,7 +477,7 @@ function generateHeatmapDataSet2()
 function generateLineChartDataSet()
 {
     // REAL DATA:
-    var jsonResponse = JSON.parse(fs.readFileSync('./data/queryForLineChartResult.json', 'utf-8'));
+    const jsonResponse = parseQueryJSON("queryForLineChartResult.json");
 
     // assume data consists of an array of (about 500) json blobs where each looks like this:
     // {game_date : "2024-01-04", winrate_each_day : 0.66667, games_played : 3, games_won : 2, aggregate_winrate : 0.6333}
@@ -536,7 +542,7 @@ function generateLineChartDataSet()
 
 function generatePartyWinrateDataSet()
 {
-    var jsonResponse = JSON.parse(fs.readFileSync('./data/queryForPartyWinrateResult.json', 'utf-8'));
+    const jsonResponse = parseQueryJSON("queryForPartyWinrateResult.json");
 
     var winData = [0,0,0,0,0]; // data[x] = winrate for party size x where x is the amount of party members (0 - solo, 4 - five stack)
     var lossData = [0,0,0,0,0];
@@ -605,4 +611,35 @@ function generatePartyWinrateDataSet()
     console.log(lossData);
 
     return [winData,lossData];
+}
+
+function parseQueryJSON(filename)
+{
+  var parsedQuery = undefined;
+
+  const dataPath = "./data/";
+  const dataPath_dist = "./resources/app/data/";
+
+  try 
+  {
+    // first, assume the query json resides in ./data/
+    parsedQuery = JSON.parse(fs.readFileSync(dataPath + filename, 'utf-8'));
+    
+  } catch (error) {
+    if(error.code === 'ENOENT')
+    {
+      // if the file wasn't found, check if it can be found where the packaged executable would place it, which is in ./resources/app/data
+      
+      try {
+        parsedQuery = JSON.parse(fs.readFileSync(dataPath_dist + filename, 'utf-8'));  
+      } catch (error) {
+        console.log("File not found: " + filename + ". May need to process replays first?");
+      }
+    }
+    else {
+      console.error('An unexpected error occurred:', error);
+  }
+  }
+
+  return parsedQuery;
 }
