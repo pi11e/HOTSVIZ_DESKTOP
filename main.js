@@ -1,5 +1,7 @@
 const { app, BrowserWindow, dialog, ipcMain } = require('electron');
 const path = require('path');
+const { spawn } = require("child_process");
+
 const fs = require('fs'); // File system module
 
 const hotsdata = require('./hotsviz_src/hotsdata.js');
@@ -146,7 +148,7 @@ ipcMain.handle("get-chart-data", (event, config) =>
 {
 
     console.log("calling getChartData with parameter:", config);
-    //return "Chart created successfully"; // Optional response
+    
     let response;
     
 
@@ -172,12 +174,71 @@ ipcMain.handle("get-chart-data", (event, config) =>
 
 });
 
-async function loadHotsData(chartType)
+/*
+ipcMain.handle("convert-replays", (event, folderPath) =>
 {
-    const hotsData = await import('./hotsviz_src/hotsdata.js');
-    
-    // implement async import / returning response here
-}
+
+    console.log("convert replays in main with folderpath " + folderPath);
+
+    // TO DO: IMPLEMENT REPLAY CONVERSION USING HEROES DECODE
+
+
+});
+*/
+
+// Function to process all .stormreplay files in a folder
+ipcMain.handle("convert-replays", async (_event, folderPath) => {
+    return new Promise((resolve) => {
+        fs.readdir(folderPath, (err, files) => {
+            if (err) {
+                console.error(`Error reading folder: ${err.message}`);
+                resolve({ success: false, message: "Failed to read folder." });
+                return;
+            }
+
+            const stormReplays = files.filter(file => file.endsWith(".StormReplay"));
+            if (stormReplays.length === 0) {
+                console.log("No .stormreplay files found.");
+                resolve({ success: false, message: "No replay files found." });
+                return;
+            }
+
+            let processedCount = 0;
+            stormReplays.forEach((file) => {
+                const replayPath = path.join(folderPath, file);
+                const jsonPath = replayPath + ".json";
+
+                if (fs.existsSync(jsonPath)) {
+                    console.log(`Skipping: ${file} (JSON already exists)`);
+                    processedCount++;
+                    if (processedCount === stormReplays.length) {
+                        resolve({ success: true, message: "Replay processing completed." });
+                    }
+                    return;
+                }
+
+                console.log(`Processing: ${file}`);
+                const exePath = path.join(__dirname, "heroesDecode", "HeroesDecode.exe");
+                const command = `"${exePath}" get-json --replay-path "${replayPath}" > "${jsonPath}"`;
+
+                const child = spawn(command, { shell: true });
+
+                child.on("close", (code) => {
+                    if (code === 0) {
+                        console.log(`Processed successfully: ${file}`);
+                    } else {
+                        console.error(`Error processing: ${file} (Exit code: ${code})`);
+                    }
+
+                    processedCount++;
+                    if (processedCount === stormReplays.length) {
+                        resolve({ success: true, message: "Replay processing completed." });
+                    }
+                });
+            });
+        });
+    });
+});
 
 app.setPath('userData', path.join(app.getPath('appData'), 'HOTSVIZ'));
 

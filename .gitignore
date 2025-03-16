@@ -6,3 +6,6 @@ data/queryForMapStatsResult.json
 data/queryForLineChartResult.json
 data/queryForHeroStatsResult.json
 data/gameData_sqlite.db
+data/queryForRankedMapsResult.json
+data/queryForRankedHeroesResult.json
+data/queryForHeatmapResult.json

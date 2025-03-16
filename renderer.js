@@ -1,4 +1,4 @@
-
+let charts = [];
 
 document.addEventListener("DOMContentLoaded", async () => 
 {
@@ -28,14 +28,20 @@ document.addEventListener("DOMContentLoaded", async () =>
         }
     });
 
+    document.getElementById("convertReplays").addEventListener("click", async () =>     
+        {
+            console.log("convert replays pressed in renderer");
+            
+            // call heroes decode here
+            var folderPath = document.getElementById("selectedFolder").textContent;
+            window.electron.convertReplays(folderPath);
+
+        });
+
     // HANDLING PROCESS REPLAYS
     document.getElementById("processReplays").addEventListener("click", async () =>     
     {
-        var defaultText = "0 replays processed. Visualization pending."
-
-        console.log("process replays clicked inside renderer");
-        window.electron.processReplays();
-        
+        window.electron.processReplays();   
     });
 
     document.getElementById("reloadVisualization").addEventListener("click", async () =>     
@@ -102,6 +108,10 @@ function createChart(chartName)
 {
     console.log("creating chart " + chartName);
 
+    // reset existing charts and clear the charts array
+    charts.forEach(chart => chart.destroy());
+    charts = [];
+
     window.electron.getChartData(chartName).then(response => 
         {
             var result = JSON.parse(response);
@@ -109,11 +119,14 @@ function createChart(chartName)
             // render chart based on data from response
             const ctx = document.getElementById(chartName).getContext('2d');
     
-            new Chart(ctx, {
+            const newChart = new Chart(ctx, {
                 type: result.type,
                 data: result.data,
                 options: result.options
             });
+
+            // store new charts in the charts array so they can be destroyed before redrawing charts when reloading
+            charts.push(newChart);
             
         }).catch(error => {
         console.error(`Error loading ${chartName}:`, error);

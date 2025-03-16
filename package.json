@@ -2,7 +2,7 @@
   "name": "HOTSVIZ-Desktop",
   "version": "1.0.0",
   "main": "main.js",
-    "scripts": {
+  "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "distribute": "electron-packager . HOTSVIZ-Desktop --platform=win32 --arch=x64 --out=dist --overwrite",
     "launch": "npx electron ."
