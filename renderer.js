@@ -116,6 +116,8 @@ function createChart(chartName)
         {
             var result = JSON.parse(response);
     
+            console.log("getChartData result = " + result);
+
             // render chart based on data from response
             const ctx = document.getElementById(chartName).getContext('2d');
     
