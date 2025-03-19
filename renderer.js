@@ -1,4 +1,4 @@
-let charts = [];
+window.charts = [];
 
 document.addEventListener("DOMContentLoaded", async () => 
 {
@@ -30,7 +30,7 @@ document.addEventListener("DOMContentLoaded", async () =>
 
     document.getElementById("convertReplays").addEventListener("click", async () =>     
         {
-            console.log("convert replays pressed in renderer");
+            //console.log("convert replays pressed in renderer");
             
             // call heroes decode here
             var folderPath = document.getElementById("selectedFolder").textContent;
@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", async () =>
 
     document.getElementById("reloadVisualization").addEventListener("click", async () =>     
         {
-            console.log("creating charts.");
+            //console.log("creating charts.");
         
             // List of chart names
             const chartNames = [
@@ -62,61 +62,22 @@ document.addEventListener("DOMContentLoaded", async () =>
             chartNames.forEach(createChart);           
         });
 
-    // expose main.js chart creation and call it here (then in main forward the call to hotsviz.js)
     
-    
-    
-    /*
-    const chartConfig = { type: "bar", data: [10, 20, 30] }; // Example config
-
-    window.electron.getChartData(chartConfig).then(response => {
-    console.log("Main process responded:", response);
-    }).catch(error => {
-    console.error("Error:", error);
-    });
-    */
-
-
-
-    // TO DO:
-    // instead of passing the config here, call getChartData multiple times to get the data for each chart type
-    // then create the new chart using the corresponding chartData
-    // ex.
-    //  var barChartData = window.electron.getChartData('barChart').then(response => {
-    //  console.log("Main process responded:", response);
-
-        //  now create the new chart using the data from response
-        //const ctx = document.getElementById('barChart').getContext('2d'); // or just get the canvas
-        //new Chart(ctx, {type:bar, data:response});
-
-
-    //  }).catch(error => {
-    //  console.error("Error:", error);
-    //  });
-
-    // Chart Types:
-    // 1. BarChart that displays winrate over the last X games 
-    // 2. PieChart that displays top hero games
-    // 3. 
-
-    
-
-
 });
 
 function createChart(chartName) 
 {
-    console.log("creating chart " + chartName);
+    //console.log("creating chart " + chartName);
 
     // reset existing charts and clear the charts array
-    charts.forEach(chart => chart.destroy());
-    charts = [];
+    window.charts.forEach(chart => chart.destroy());
+    window.charts = [];
 
     window.electron.getChartData(chartName).then(response => 
         {
             var result = JSON.parse(response);
     
-            console.log("getChartData result = " + result);
+            //console.log("getChartData result = " + result);
 
             // render chart based on data from response
             const ctx = document.getElementById(chartName).getContext('2d');
@@ -127,8 +88,26 @@ function createChart(chartName)
                 options: result.options
             });
 
+            // DEBUG:: 
+            // this fixes the tooltips never updating from before. investigate if it can still be done differently somehow, otherwise try to reapply response.options after the chart was created.
+            
+            if(chartName == "heatmap")
+            {
+                // add special runtime tooltip, labelling and scaling handlers - this needs to happen after the chart has been created
+            
+                newChart.options.plugins.tooltip.callbacks.label = function (context) {
+                    console.log("Tooltip recalculating - function added after new Chart()");
+                    return `Data: ${context.dataset.data[context.dataIndex].v}`;
+                  };
+            }
+
+            
+              
+            
             // store new charts in the charts array so they can be destroyed before redrawing charts when reloading
             charts.push(newChart);
+
+            
             
         }).catch(error => {
         console.error(`Error loading ${chartName}:`, error);

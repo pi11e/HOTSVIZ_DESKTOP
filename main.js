@@ -12,7 +12,7 @@ function createWindow() {
         height: 600,
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
-            contextIsolation: true,
+            contextIsolation: true, 
             devTools: true
         }
     });
@@ -104,7 +104,7 @@ ipcMain.on("open-dialog", () => {
 
 // handle processReplays button
 ipcMain.on("process-replays", () => {
-    console.log("process replay button pressed in main.js");
+    //console.log("process replay button pressed in main.js");
     
     
     loadHotsDB();
@@ -147,7 +147,7 @@ ipcMain.handle("get-data-path-config", async () => {
 ipcMain.handle("get-chart-data", (event, config) => 
 {
 
-    console.log("calling getChartData with parameter:", config);
+    //console.log("calling getChartData with parameter:", config);
     
     let response;
     
@@ -174,17 +174,6 @@ ipcMain.handle("get-chart-data", (event, config) =>
 
 });
 
-/*
-ipcMain.handle("convert-replays", (event, folderPath) =>
-{
-
-    console.log("convert replays in main with folderpath " + folderPath);
-
-    // TO DO: IMPLEMENT REPLAY CONVERSION USING HEROES DECODE
-
-
-});
-*/
 
 // Function to process all .stormreplay files in a folder
 ipcMain.handle("convert-replays", async (_event, folderPath) => {
@@ -198,7 +187,7 @@ ipcMain.handle("convert-replays", async (_event, folderPath) => {
 
             const stormReplays = files.filter(file => file.endsWith(".StormReplay"));
             if (stormReplays.length === 0) {
-                console.log("No .stormreplay files found.");
+                console.log("No .StormReplay files found.");
                 resolve({ success: false, message: "No replay files found." });
                 return;
             }
