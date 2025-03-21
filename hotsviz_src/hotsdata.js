@@ -9,6 +9,34 @@ the Chart.js charts used by the visualizer (hotsviz) to render player statistics
 
 */
 
+function getHeroWinRate() {
+  var heroStats = parseQueryJSON('queryForHeroStatsResult.json', 'utf-8');
+  
+  // Using a plain object instead of Map
+  var heroWinrate = {};
+
+  heroStats.forEach(element => {
+      heroWinrate[element.game_hero] = [element.win_rate, element.total_games];
+  });
+
+  return heroWinrate;
+}
+
+function getMapWinrate() {
+  // Parse map stats from the JSON file
+  var mapStats = parseQueryJSON('queryForMapStatsResult.json', 'utf-8');
+  
+  // Using a plain object instead of Map
+  var mapWinrate = {};
+
+  mapStats.forEach(element => {
+      mapWinrate[element.game_map] = element.win_rate;
+  });
+
+  return mapWinrate;
+}
+
+
 
 
 export function isValidChartType(chartType) {
@@ -30,8 +58,8 @@ export function createResponseForChartType(chartType)
     switch (chartType) {
         case "heatmap":
             dataSet = createHeatMapResponse();
-            console.log("Heat Map Dataset:");
-            console.log(dataSet);
+            //console.log("Heat Map Dataset:");
+            //console.log(dataSet);
             break;
         case "piechart": // done and working
             dataSet = createPieChartResponse();
@@ -58,12 +86,11 @@ export function createResponseForChartType(chartType)
 
 function createHeatMapResponse()
 {
-    const response = {_type:undefined, _data:undefined, _options:undefined};
+    
 
-    var tealColor = 'rgba(0,128,128,0.3)';
-
-    // testing: get the data from hotsdata.js
     var heatmapData = generateHeatmapDataSet2();
+
+    
 
     const rankedMaps = Array.from(JSON.parse(fs.readFileSync('./data/queryForRankedMapsResult.json', 'utf-8')));
     const rankedHeroes = Array.from(JSON.parse(fs.readFileSync('./data/queryForRankedHeroesResult.json', 'utf-8')));
@@ -71,172 +98,19 @@ function createHeatMapResponse()
     const mapLabels = [];
     const heroLabels = [];
 
-    
-
     rankedHeroes.forEach(element => { heroLabels.push(element.game_hero)});
     rankedMaps.forEach(element => { mapLabels.push(element.game_map)});
 
-    console.log("maplabels: " + mapLabels);
-    console.log("herolabels: " + heroLabels);
+    const nestedMapStats = generateNestedMapDataSetAsPlainObject();
 
-    const matrixRowCount = rankedMaps.length;
-    const matrixColumnCount = rankedHeroes.length;
+    var mapWinrate = getMapWinrate();
+    var heroWinrate = getHeroWinRate();
 
-    const nestedMapStats = generateNestedMapDataSet();
+    var response = {heatmapData, mapLabels, heroLabels, nestedMapStats, heroWinrate, mapWinrate};
 
-
-    // DEBUG - COMMENT:
-    // It looks like all the data is correct. However, the tooltips and backgroundColor callbacks are never called it seems. 
-    // For example, the helper function to calculate the RGBA cell colors also never seems to get called.
-
-    const chartData = {
-      datasets: [{
-        label: 'Hero winrate heatmap',
-        data: heatmapData,
-        
-        /*
-        backgroundColor(context) {
-          const value = context.dataset.data[context.dataIndex].v;
-    
-          
-          console.log("context");
-          console.log(context);
-
-
-          console.log("heatmapdata in datasets");
-          console.log(heatmapData);
-    
-          const tempHeroName = context.dataset.data[context.dataIndex].x;
-          const tempMapName = context.dataset.data[context.dataIndex].y;
-    
-          //console.log(nestedMapStats.get(tempMapName).get(tempHeroName));
-          
-    
-          const alpha = (value*50 - 5) / 40;
-          
-          var color = undefined;
-    
-          // if(!nestedMapStats.get(tempMapName).has(tempHeroName)) 
-          //   {
-              
-          //     color = 'rgba(0,0,0,0.5)';
-          //   } 
-          //   else 
-          //   {
-              
-          //     color = 'rgba(0,128,0,'+alpha+')';
-          //   }
-            if(value == null) {
-              color = 'rgba(0,0,0,0.5)';
-            } else {
-              // color = 'rgba(0,128,0,'+alpha+')';
-              color = calculateRGBA(value, nestedMapStats.get(tempMapName).get(tempHeroName).games_played);
-            }
-            return color;
-        },
-        borderColor(context) {
-          const value = context.dataset.data[context.dataIndex].v;
-          const alpha = (value*30 - 5) / 40;
-          return 'rgba(0,0,0,0.5)'
-        },*/
-        borderWidth: 1,
-        width: ({chart}) => (chart.chartArea || {}).width / (matrixColumnCount-1), // x axis ... that's amount of columns-1 ie heroes. magic number: 51 distinct heroes in the dataset (incl non SL games)
-        //width: 25,
-        height: ({chart}) =>(chart.chartArea || {}).height / (matrixRowCount-1)// y axis ... that's amount of maps ie amount of objects in the dataset. magic number: 18 distinct maps in the dataset (incl non SL maps)
-        //height: 20
-      }]
-    };
-
-    console.log("calculated width of each element:")
-    console.log(chartData.datasets[0].width);
-    
-    console.log("calculated height of each element:")
-    console.log(chartData.datasets[0].height);
-    
-    const config = {
-      type: 'matrix',
-      data: chartData,
-      options: {
-        plugins: {
-          legend: false,
-          tooltip: {
-            callbacks: {
-              title() {
-                console.log("title callback in action");
-                return '';
-              },
-              label(context) {
-                const v = context.dataset.data[context.dataIndex];
-                console.log("Tooltip recalculating... function added before new Chart()"); // Ensure this logs every time
-  
-                const wr = v.v == null ? "N/A" : Math.round(v.v*100) + "%";
-                const mapAndHeroStats = nestedMapStats.get(v.y).get(v.x);
-                const gamesPlayed = mapAndHeroStats == undefined ? "none" : mapAndHeroStats.games_played;
-                console.log("tooltip label in action");
-                return [v.x + ' on ' + v.y, 'winrate: ' + wr, 'games played: ' + gamesPlayed];
-              }
-            }
-          }
-        },
-        scales: {
-          x: {
-            type: 'category',
-            //labels: ['A', 'B', 'C'], // this should be the heroes
-            labels: heroLabels,
-            ticks: {
-              display: true, 
-              callback : function (value, index, ticks)
-              {
-                console.log("callback in action");
-                var tempHeroName = heroLabels[value];
-                if(tempHeroName != null)
-                {
-                  const win_rate = heroWinrate.get(tempHeroName)[0];
-                  return tempHeroName +" "+Math.round(win_rate*1000)/10 + "%";
-                }
-    
-                return tempHeroName;
-                //console.log(index);
-                //console.log(ticks);
-              }
-            },
-            grid: {
-              display: false
-            }
-          },
-          y: {
-            type: 'category',
-            //labels: ['X', 'Y', 'Z'], // this should be the maps
-            labels: mapLabels,
-            offset: true,
-            ticks: {
-              display: true,
-              callback : function (value, index, ticks)
-              {
-                var tempMapName = mapLabels[value];
-                if(tempMapName != null)
-                {
-                  return tempMapName +" "+Math.round(mapWinrate.get(tempMapName)*1000)/10 + "%";
-                }
-    
-                return tempMapName;
-              }
-            },
-            grid: {
-              display: false
-            }
-          }
-        }
-      }
-    };
-    
-    return config;
+    return response;
 }
 
-export function configureHeatmap(chart, context)
-{
-  console.log("adding dynamic configuration for heatmap");
-}
 
 function createPieChartResponse()
 {
@@ -375,6 +249,32 @@ function generateNestedMapDataSet()
 
     return mapOfMaps;
 }
+
+function generateNestedMapDataSetAsPlainObject() {
+  const jsonResponse = parseQueryJSON("queryForNestedMapResult.json");
+
+  // Initialize the nested object structure
+  const mapOfMaps = {};
+
+  // Iterate over each item in the JSON data
+  jsonResponse.forEach(item => {
+      const gameMap = item.game_map;
+      const gameHero = item.game_hero;
+      const gamesPlayed = item.games_played;
+      const gamesWon = item.games_won;
+
+      // Ensure the game map exists in the outer object
+      if (!mapOfMaps[gameMap]) {
+          mapOfMaps[gameMap] = {}; // Create an empty object instead of a Map
+      }
+
+      // Assign the hero stats directly to the inner object
+      mapOfMaps[gameMap][gameHero] = { games_played: gamesPlayed, games_won: gamesWon };
+  });
+
+  return mapOfMaps;
+}
+
 
 function createBarChartResponse()
 {
@@ -751,20 +651,4 @@ function parseQueryJSON(filename)
   return parsedQuery;
 }
 
-function calculateRGBA(winrate, gamesPlayed) {
 
-  console.log("Calculating color value for heatmap");
-
-  // Calculate the red, green, and alpha components
-  const red = Math.round(255 * (1 - winrate));
-  const blue = 0; // Blue component is always 0
-  const green = Math.round(255 * winrate);
-
-  // Normalize gamesPlayed to a range for alpha (for example, between 0.1 and 1)
-  // Adjust the scale factor as needed to fit your data
-  const scaleFactor = 0.2;
-  const alpha = Math.min(Math.max((gamesPlayed * scaleFactor), 0.1), 1).toFixed(2);
-
-  // Return the RGBA color string
-  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-}
