@@ -4,7 +4,7 @@
   "main": "main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "distribute": "electron-packager . HOTSVIZ-Desktop --platform=win32 --arch=x64 --out=dist --overwrite",
+    "distribute": "npm run clean && electron-packager . HOTSVIZ-Desktop --platform=win32 --arch=x64 --out=dist --overwrite",
     "launch": "npx electron .",
     "clean": "rimraf ./data/*.json && type nul > ./data/data_path.cfg"
   },
