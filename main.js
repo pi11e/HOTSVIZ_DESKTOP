@@ -249,15 +249,19 @@ ipcMain.handle("convert-replays", async (_event, folderPath) => {
 
 
 ipcMain.on("database-processing-start", (event) => {
-    console.log("Forwarding event: database-processing-start"); // Debug log
+    //console.log("Forwarding event: database-processing-start"); // Debug log
     BrowserWindow.getAllWindows().forEach(win => win.webContents.send("database-processing-start"));
 });
 
 ipcMain.on("database-processing-done", (event) => {
-    console.log("Forwarding event: database-processing-done"); // Debug log
+    //console.log("Forwarding event: database-processing-done"); // Debug log
     BrowserWindow.getAllWindows().forEach(win => win.webContents.send("database-processing-done"));
 });
 
+ipcMain.on("database-progress", (_event, count) => {
+    //console.log("Forwarding event: database-progress with count = ", count); // Debug log
+    BrowserWindow.getAllWindows().forEach(win => win.webContents.send("database-progress", count));
+});
 
 app.setPath('userData', path.join(app.getPath('appData'), 'HOTSVIZ'));
 

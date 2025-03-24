@@ -75,13 +75,21 @@ async function queryDatabase(queryString)
   const parameters = [];
 
   activeInsertions++;
-
-  if(activeInsertions === 1 && eventEmitter)
+  
+  if(eventEmitter)
   {
-    console.log("sending event database-processing-start");
-    eventEmitter.emit("database-processing-start");
-    
+    if(activeInsertions === 1)
+      {
+        //console.log("sending event database-processing-start");
+        eventEmitter.emit("database-processing-start");
+        
+      }
+      else
+      {
+        eventEmitter.emit("database-progress", null, activeInsertions);
+      }  
   }
+  
   
    // using db.each 
   const resultSet = fileDB.all(queryString, parameters, (err, result) => 
@@ -108,11 +116,19 @@ async function queryDatabase(queryString)
         //console.log("Input operation successful.");
         
         console.log("active insertion count = " + activeInsertions);
-        if(activeInsertions === 0 && eventEmitter)
+        if(eventEmitter)
         {
-          console.log("sending event database-processing-done");
-          eventEmitter.emit("database-processing-done");
+          if(activeInsertions === 0)
+          {
+              //console.log("sending event database-processing-done");
+              eventEmitter.emit("database-processing-done");
+          }
+          else
+          {
+            eventEmitter.emit("database-progress", null, activeInsertions);
+          }
         }
+        
 
       }
   });

@@ -10,5 +10,6 @@ contextBridge.exposeInMainWorld("electron", {
     convertReplays: (folder) => ipcRenderer.invoke("convert-replays", folder),
     onDatabaseProcessingStart: (callback) => ipcRenderer.on("database-processing-start", callback),
     onDatabaseProcessingDone: (callback) => ipcRenderer.on("database-processing-done", callback),
-    onConvertReplaysDone: (callback) => ipcRenderer.on("convert-replays-done", (_event, data) => callback(data))
+    onConvertReplaysDone: (callback) => ipcRenderer.on("convert-replays-done", (_event, data) => callback(data)),
+    onDatabaseProgress: (callback) => ipcRenderer.on("database-progress", (_event, count) => callback(count))
 });

@@ -1,4 +1,8 @@
 window.charts = [];
+const progressBar = document.getElementById("databaseProgressBar");
+let completedInsertions = 0;
+let peakInsertions = 0;
+
 
 document.addEventListener("DOMContentLoaded", async () => 
 {
@@ -15,6 +19,8 @@ document.addEventListener("DOMContentLoaded", async () =>
 
     // ✅ Display the result inside the <p> element
     document.getElementById("selectedFolder").textContent = dataPath;
+
+    
 
     // HANDLING SELECT FOLDER
     document.getElementById("selectFolder").addEventListener("click", async () => {
@@ -272,20 +278,39 @@ function calculateRGBA(winrate, gamesPlayed) {
 
 window.electron.onDatabaseProcessingStart(() => {
   console.log("Database OP started");
-  document.getElementById("databaseProgressBar").style.display = "block";
+  //document.getElementById("databaseProgressBar").style.display = "block";
 });
 
 window.electron.onDatabaseProcessingDone(() => {
   console.log("Database OP ended");
-  document.getElementById("databaseProgressBar").style.display = "none";
-
+  //document.getElementById("databaseProgressBar").style.display = "none";
+  peakInsertions = 0;
   // trigger vis reload
   document.getElementById("reloadVisualization").click();
 });
 
 window.electron.onConvertReplaysDone((data) => {
   const message = `Found ${data.totalReplays} replay files. Generated ${data.newJsonCount} new JSON files.`;
-  console.log("Renderer received:", message);
-  
+  //console.log("Renderer received:", message);
   document.getElementById("conversionStatus").innerText = message;
+});
+
+
+
+window.electron.onDatabaseProgress((activeInsertions) => {
+  console.log("Renderer received: onDatabaseProgress with active count =", activeInsertions);
+
+  // Update peakInsertions to reflect the highest count observed
+  peakInsertions = Math.max(peakInsertions, activeInsertions);
+
+  progressBar.style.display = "block"; // Ensure it's visible
+  progressBar.max = peakInsertions; // Adjust max dynamically
+  progressBar.value = peakInsertions - activeInsertions; // Move forward as operations complete
+
+  if (activeInsertions === 0) {
+      setTimeout(() => {
+          progressBar.style.display = "none";
+          peakInsertions = 0; // Reset for the next operation
+      }, 500);
+  }
 });
