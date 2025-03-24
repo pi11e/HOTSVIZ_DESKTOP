@@ -92,8 +92,8 @@ function createHeatMapResponse()
 
     
 
-    const rankedMaps = Array.from(JSON.parse(fs.readFileSync('./data/queryForRankedMapsResult.json', 'utf-8')));
-    const rankedHeroes = Array.from(JSON.parse(fs.readFileSync('./data/queryForRankedHeroesResult.json', 'utf-8')));
+    const rankedMaps = parseQueryJSON("queryForRankedMapsResult.json");
+    const rankedHeroes = parseQueryJSON("queryForRankedHeroesResult.json");
 
     const mapLabels = [];
     const heroLabels = [];
