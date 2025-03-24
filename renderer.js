@@ -84,8 +84,10 @@ function createChart(chartName)
     
             var newChart = undefined;
 
+            
             if(chartName == "heatmap")
             {
+                //#region Heatmap
                 //console.log("creating heatmap from response");
                 //console.log(result);
 
@@ -225,14 +227,8 @@ function createChart(chartName)
                       config
                     );
 
+                    //#endregion
 
-                // add special runtime tooltip, labelling and scaling handlers - this needs to happen after the chart has been created
-                /*
-                newChart.options.plugins.tooltip.callbacks.label = function (context) {
-                    console.log("Tooltip recalculating - function added after new Chart()");
-                    return `Data: ${context.dataset.data[context.dataIndex].v}`;
-                  };
-                  */
             }
             else
             {
@@ -272,6 +268,14 @@ function calculateRGBA(winrate, gamesPlayed) {
   
     // Return the RGBA color string
     return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
-  }
+}
 
-  
+window.electron.onDatabaseProcessingStart(() => {
+  console.log("Database OP started");
+  document.getElementById("databaseProgressBar").style.display = "block";
+});
+
+window.electron.onDatabaseProcessingDone(() => {
+  console.log("Database OP ended");
+  document.getElementById("databaseProgressBar").style.display = "none";
+});

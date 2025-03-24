@@ -6,11 +6,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import sqlite3 from 'sqlite3';
 
-import { ipcMain } from 'electron';
-
 var uniqueGamesJSON = [];
 var dataFolderPath = undefined;
 var replayFilePath = undefined;
+
 
 
 const queryForHeroStats = "SELECT game_hero, COUNT(*) AS total_games, SUM(CASE WHEN game_winner = 1 THEN 1 ELSE 0 END) AS total_wins, CAST(SUM(CASE WHEN game_winner = 1 THEN 1 ELSE 0 END) AS FLOAT) / COUNT(*) AS win_rate FROM uniqueGames WHERE game_mode = 'stormLeague' GROUP BY game_hero ORDER BY total_games DESC LIMIT 0, 1000";
@@ -21,6 +20,14 @@ const queryForPartyWinrate = "SELECT game_winner, game_players FROM uniqueGames"
 var queryForHeatmap = undefined;
 var queryForLineChart = undefined;
 var queryForNestedMap = undefined;
+
+let activeInsertions = 0;
+let eventEmitter = null;
+
+export function setEventEmitter(ipc)
+{
+    eventEmitter = ipc;
+}
 
 
 
@@ -66,9 +73,20 @@ async function queryDatabase(queryString)
   const fileDB = new sqlite3.Database(dataFolderPath + "gameData_sqlite.db")
   fileDB.run('PRAGMA sjournal_mode = WAL;');
   const parameters = [];
+
+  activeInsertions++;
+
+  if(activeInsertions === 1 && eventEmitter)
+  {
+    console.log("sending event database-processing-start");
+    eventEmitter.emit("database-processing-start");
+    
+  }
   
    // using db.each 
-  const resultSet = fileDB.all(queryString, parameters, (err, result) => {
+  const resultSet = fileDB.all(queryString, parameters, (err, result) => 
+  {
+    activeInsertions--;
     // each row processed here
     if(err)
       {
@@ -86,10 +104,22 @@ async function queryDatabase(queryString)
 
       else
       {
-        console.log("Input operation successful.");
+        
+        //console.log("Input operation successful.");
+        
+        console.log("active insertion count = " + activeInsertions);
+        if(activeInsertions === 0 && eventEmitter)
+        {
+          console.log("sending event database-processing-done");
+          eventEmitter.emit("database-processing-done");
+        }
+
       }
   });
   //await sleep(1000);
+
+
+
   fileDB.close();
 
   
@@ -121,7 +151,7 @@ export async function queryDatabaseAndSerializeResult(queryString, filename)
     }
 
     serializeQuery(result,filename);
-    console.log("Output operation successful.");
+    //console.log("Output operation successful.");
   });
   fileDB.close();
 

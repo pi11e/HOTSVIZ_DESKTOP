@@ -6,6 +6,7 @@ const fs = require('fs'); // File system module
 
 const hotsdata = require('./hotsviz_src/hotsdata.js');
 
+
 function createWindow() {
     const win = new BrowserWindow({
         width: 800,
@@ -117,6 +118,8 @@ async function loadHotsDB()
     const dataPath = "./data/";
     const dataPath_dist = "./resources/app/data/";
 
+    hotsdb.setEventEmitter(ipcMain);
+
     if(app.isPackaged)
     {
         hotsdb.initializeData(dataPath_dist);
@@ -126,6 +129,7 @@ async function loadHotsDB()
         hotsdb.initializeData(dataPath);
     }
 
+    
     hotsdb.initializeDatabase();
 
 
@@ -228,6 +232,17 @@ ipcMain.handle("convert-replays", async (_event, folderPath) => {
         });
     });
 });
+
+ipcMain.on("database-processing-start", (event) => {
+    console.log("Forwarding event: database-processing-start"); // Debug log
+    BrowserWindow.getAllWindows().forEach(win => win.webContents.send("database-processing-start"));
+});
+
+ipcMain.on("database-processing-done", (event) => {
+    console.log("Forwarding event: database-processing-done"); // Debug log
+    BrowserWindow.getAllWindows().forEach(win => win.webContents.send("database-processing-done"));
+});
+
 
 app.setPath('userData', path.join(app.getPath('appData'), 'HOTSVIZ'));
 
