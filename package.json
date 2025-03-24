@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "distribute": "electron-packager . HOTSVIZ-Desktop --platform=win32 --arch=x64 --out=dist --overwrite",
-    "launch": "npx electron ."
+    "launch": "npx electron .",
+    "clean": "rimraf ./data/*.json && type nul > ./data/data_path.cfg"
   },
   "keywords": [],
   "author": "",
@@ -14,6 +15,7 @@
   "dependencies": {
     "chartjs-chart-matrix": "^2.0.1",
     "electron": "^35.0.1",
-    "sqlite3": "^5.1.7"
+    "sqlite3": "^5.1.7",
+    "rimraf": "^3.0.2"
   }
 }
