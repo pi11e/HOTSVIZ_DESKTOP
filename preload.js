@@ -9,5 +9,6 @@ contextBridge.exposeInMainWorld("electron", {
     getChartData: (config) => ipcRenderer.invoke("get-chart-data", config),
     convertReplays: (folder) => ipcRenderer.invoke("convert-replays", folder),
     onDatabaseProcessingStart: (callback) => ipcRenderer.on("database-processing-start", callback),
-    onDatabaseProcessingDone: (callback) => ipcRenderer.on("database-processing-done", callback)
+    onDatabaseProcessingDone: (callback) => ipcRenderer.on("database-processing-done", callback),
+    onConvertReplaysDone: (callback) => ipcRenderer.on("convert-replays-done", (_event, data) => callback(data))
 });

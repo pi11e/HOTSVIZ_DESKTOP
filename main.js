@@ -190,7 +190,10 @@ ipcMain.handle("convert-replays", async (_event, folderPath) => {
             }
 
             const stormReplays = files.filter(file => file.endsWith(".StormReplay"));
-            if (stormReplays.length === 0) {
+            const totalReplays = stormReplays.length;
+            let newJsonCount = 0; // Tracks how many new JSON files are created
+
+            if (totalReplays === 0) {
                 console.log("No .StormReplay files found.");
                 resolve({ success: false, message: "No replay files found." });
                 return;
@@ -203,35 +206,47 @@ ipcMain.handle("convert-replays", async (_event, folderPath) => {
 
                 if (fs.existsSync(jsonPath)) {
                     console.log(`Skipping: ${file} (JSON already exists)`);
-                    processedCount++;
-                    if (processedCount === stormReplays.length) {
-                        resolve({ success: true, message: "Replay processing completed." });
-                    }
+                } else {
+                    console.log(`Processing: ${file}`);
+                    newJsonCount++;
+
+                    const exePath = path.join(__dirname, "heroesDecode", "HeroesDecode.exe");
+                    const command = `"${exePath}" get-json --replay-path "${replayPath}" > "${jsonPath}"`;
+
+                    const child = spawn(command, { shell: true });
+
+                    child.on("close", (code) => {
+                        if (code !== 0) {
+                            console.error(`Error processing: ${file} (Exit code: ${code})`);
+                        }
+                        finalizeProcessing();
+                    });
+
                     return;
                 }
 
-                console.log(`Processing: ${file}`);
-                const exePath = path.join(__dirname, "heroesDecode", "HeroesDecode.exe");
-                const command = `"${exePath}" get-json --replay-path "${replayPath}" > "${jsonPath}"`;
-
-                const child = spawn(command, { shell: true });
-
-                child.on("close", (code) => {
-                    if (code === 0) {
-                        console.log(`Processed successfully: ${file}`);
-                    } else {
-                        console.error(`Error processing: ${file} (Exit code: ${code})`);
-                    }
-
-                    processedCount++;
-                    if (processedCount === stormReplays.length) {
-                        resolve({ success: true, message: "Replay processing completed." });
-                    }
-                });
+                finalizeProcessing();
             });
+
+            function finalizeProcessing() {
+                processedCount++;
+                if (processedCount === totalReplays) {
+                    const message = `Found ${totalReplays} replay files. Generated ${newJsonCount} new JSON files.`;
+                    console.log(message);
+
+                    // Send the result to the renderer
+                    BrowserWindow.getAllWindows().forEach(win => win.webContents.send("convert-replays-done", {
+                        totalReplays,
+                        newJsonCount
+                    }));
+
+                    resolve({ success: true, message });
+                }
+            }
         });
     });
 });
+
 
 ipcMain.on("database-processing-start", (event) => {
     console.log("Forwarding event: database-processing-start"); // Debug log

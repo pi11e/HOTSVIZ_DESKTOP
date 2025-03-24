@@ -278,4 +278,14 @@ window.electron.onDatabaseProcessingStart(() => {
 window.electron.onDatabaseProcessingDone(() => {
   console.log("Database OP ended");
   document.getElementById("databaseProgressBar").style.display = "none";
+
+  // trigger vis reload
+  document.getElementById("reloadVisualization").click();
+});
+
+window.electron.onConvertReplaysDone((data) => {
+  const message = `Found ${data.totalReplays} replay files. Generated ${data.newJsonCount} new JSON files.`;
+  console.log("Renderer received:", message);
+  
+  document.getElementById("conversionStatus").innerText = message;
 });
