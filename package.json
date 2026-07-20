@@ -1,5 +1,5 @@
 {
-  "name": "HOTSVIZ-Desktop",
+  "name": "HOTSVIZ_Desktop",
   "version": "1.0.0",
   "main": "main.js",
   "scripts": {
@@ -15,7 +15,8 @@
   "dependencies": {
     "chartjs-chart-matrix": "^2.0.1",
     "electron": "^35.0.1",
-    "sqlite3": "^5.1.7",
-    "rimraf": "^3.0.2"
+    "p-limit": "^7.1.1",
+    "rimraf": "^3.0.2",
+    "sqlite3": "^5.1.7"
   }
 }

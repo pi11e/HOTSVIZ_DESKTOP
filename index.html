@@ -5,7 +5,7 @@
     <title>Chart.js in Electron</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-matrix"></script>
-
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <button id="openDialog">Help / Setup</button><br><br>
@@ -15,11 +15,38 @@
     <button id="convertReplays">Analyze Replay Files</button><br><br>
     <p id="conversionStatus">Waiting for replay processing...</p>
     <button id="processReplays">Recalculate Statistics</button><button id="reloadVisualization">Reload Charts (optional)</button><br><br>
-    <progress id="databaseProgressBar" style="width: 100%; display: none"></progress>
+    <progress id="databaseProgressBar" value="0" max="100" style="width: 100%; display: none"></progress>
+    <span id="progressLabel">0%</span>
+
     
     
 
     <h2>Stats Review</h2>
+
+    <h3>Filter stats by</h3>
+    <div id="filters-container">
+      <select id="game-count">
+          <option value="">All Games</option>
+          <option value="3">Last 3 Games</option>
+          <option value="5">Last 5 Games</option>
+          <option value="10">Last 10 Games</option>
+          <option value="15">Last 15 Games</option>
+          <option value="25">Last 25 Games</option>
+          <option value="50">Last 50 Games</option>
+          <option value="100">Last 100 Games</option>
+      </select>
+  
+      <input type="datetime-local" id="since-date">
+  
+      <select id="map-filter">
+          <option value="">All Maps</option>
+          <!-- Maps populated dynamically -->
+      </select>
+    </div>
+  
+
+<button id="apply-filters">Apply Filters</button>
+
     
     <div style="width: 800px;"><canvas id="barchart"></canvas></div>
     <div style="width: 800px;"><canvas id="herochart"></canvas></div>

@@ -467,7 +467,7 @@ function generateHeatmapDataSet2()
                 const heroName = rankedHero.game_hero;
                 var winRate = null;
 
-                if(nestedMap.get(mapName).has(heroName))
+                if (nestedMap && nestedMap.get(mapName) && nestedMap.get(mapName).has(heroName)) 
                 {
                     winRate = nestedMap.get(mapName).get(heroName).games_won / nestedMap.get(mapName).get(heroName).games_played;
                 }

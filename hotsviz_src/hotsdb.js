@@ -12,8 +12,8 @@ var replayFilePath = undefined;
 
 
 
-const queryForHeroStats = "SELECT game_hero, COUNT(*) AS total_games, SUM(CASE WHEN game_winner = 1 THEN 1 ELSE 0 END) AS total_wins, CAST(SUM(CASE WHEN game_winner = 1 THEN 1 ELSE 0 END) AS FLOAT) / COUNT(*) AS win_rate FROM uniqueGames WHERE game_mode = 'stormLeague' GROUP BY game_hero ORDER BY total_games DESC LIMIT 0, 1000";
-const queryForMapStats = "SELECT game_map, COUNT(*) AS total_games, SUM(CASE WHEN game_winner = 1 THEN 1 ELSE 0 END) AS total_wins, CAST(SUM(CASE WHEN game_winner = 1 THEN 1 ELSE 0 END) AS FLOAT) / COUNT(*) AS win_rate FROM uniqueGames WHERE game_mode = 'stormLeague' GROUP BY game_map ORDER BY game_map LIMIT 0, 1000";
+const queryForHeroStats = "SELECT game_hero, COUNT(*) AS total_games, SUM(CASE WHEN game_winner = 1 THEN 1 ELSE 0 END) AS total_wins, CAST(SUM(CASE WHEN game_winner = 1 THEN 1 ELSE 0 END) AS FLOAT) / COUNT(*) AS win_rate FROM uniqueGames WHERE game_mode = 'stormLeague' GROUP BY game_hero ORDER BY total_games DESC";
+const queryForMapStats = "SELECT game_map, COUNT(*) AS total_games, SUM(CASE WHEN game_winner = 1 THEN 1 ELSE 0 END) AS total_wins, CAST(SUM(CASE WHEN game_winner = 1 THEN 1 ELSE 0 END) AS FLOAT) / COUNT(*) AS win_rate FROM uniqueGames WHERE game_mode = 'stormLeague' GROUP BY game_map ORDER BY game_map";
 const queryForRankedHeroes = "SELECT DISTINCT game_hero FROM uniqueGames WHERE game_mode = 'stormLeague' ORDER BY game_hero";
 const queryForRankedMaps = "SELECT DISTINCT game_map FROM uniqueGames WHERE game_mode = 'stormLeague' ORDER BY game_map";
 const queryForPartyWinrate = "SELECT game_winner, game_players FROM uniqueGames";
@@ -23,6 +23,14 @@ var queryForNestedMap = undefined;
 
 let activeInsertions = 0;
 let eventEmitter = null;
+
+let _filters = undefined; // this expects an object to be set that conforms to {gameCount, sinceDate, mapFilter}
+
+export function setFilters(filters)
+{
+  //console.log("database filters set; mapFilter: " + filters.mapFilter);
+  _filters = filters;
+}
 
 export function setEventEmitter(ipc)
 {
@@ -172,6 +180,77 @@ export async function queryDatabaseAndSerializeResult(queryString, filename)
   fileDB.close();
 
 }
+
+export async function queryDatabaseWithFiltersAndSerializeResult(baseQuery, filename, filters) {
+  const fileDB = new sqlite3.Database(dataFolderPath + "gameData_sqlite.db");
+
+  // Build the query dynamically based on filters
+  const {query, parameters} = buildQuery(baseQuery, filters);
+
+  console.log("#HOTSDB.js: rebuilding query with filters:");
+  console.log(query);
+  console.log("#HOTSDB.js: and parameters:");
+  console.log(parameters);
+
+  fileDB.all(query, parameters, (err, result) => {
+      if (err) {
+          if (err.code === 'ER_DATA_TOO_LONG') {
+              console.log("ERROR: data exceeding max length");
+          } else {
+              throw err;
+          }
+      }
+
+      // Serialize result to JSON file
+      serializeQuery(result, filename);
+  });
+
+  fileDB.close();
+}
+
+function buildQuery(baseQuery, filters) {
+  let query = baseQuery.trim(); // Ensure no trailing spaces
+  let parameters = [];
+  let whereClauses = [];
+
+  // Check and apply filters
+  if (filters) {
+      if (filters.sinceDate) {
+          whereClauses.push("game_timestamp >= ?");
+          parameters.push(filters.sinceDate);
+      }
+
+      if (filters.mapFilter) {
+          whereClauses.push("map_name = ?");
+          parameters.push(filters.mapFilter);
+      }
+  }
+
+  // Append WHERE clause correctly
+  if (whereClauses.length > 0) {
+      // Remove existing LIMIT if present
+      query = query.replace(/\bLIMIT\b.*/i, "").trim();
+      query += " WHERE " + whereClauses.join(" AND ");
+  }
+
+  // Append LIMIT only if it's not already in the base query
+  if (filters.gameCount) {
+      if (/\bLIMIT\b/i.test(baseQuery)) {
+          console.warn("Warning: Base query already has a LIMIT clause. Skipping additional LIMIT.");
+      } else {
+          query += " LIMIT ?";
+          parameters.push(filters.gameCount);
+      }
+  }
+
+  console.log("Final Query:", query);
+  console.log("Parameters:", parameters);
+
+  return { query, parameters };
+}
+
+
+
 
 
 function sleep(ms) {
@@ -324,61 +403,71 @@ CREATE TABLE uniqueGames (
 
 
 
-
-// load them in the visualization module
-function queryHeroWinrate()
-{
-    //this is for the bar chart
-
-    // this query should return a result that contains a table with game_hero, total_games, total_wins, win_rate stats
-    
-
-    queryDatabaseAndSerializeResult(queryForHeroStats, 'queryForHeroStatsResult.json');
-    // result should be an array ordered by the highest number of total wins per unique hero
+function queryHeroWinrate() {
+  if (_filters && (Boolean(_filters.gameCount) || Boolean(_filters.sinceDate) || Boolean(_filters.mapFilter))) {
+      queryDatabaseWithFiltersAndSerializeResult(queryForHeroStats, 'queryForHeroStatsResult.json', _filters);
+  } else {
+      queryDatabaseAndSerializeResult(queryForHeroStats, 'queryForHeroStatsResult.json');
+  }
 }
 
-function queryMapWinrate()
-{
-    // this is for another bar chart, data should look like this:
-    queryDatabaseAndSerializeResult(queryForMapStats, 'queryForMapStatsResult.json');
+function queryMapWinrate() {
+  if (_filters && (Boolean(_filters.gameCount) || Boolean(_filters.sinceDate) || Boolean(_filters.mapFilter))) {
+      queryDatabaseWithFiltersAndSerializeResult(queryForMapStats, 'queryForMapStatsResult.json', _filters);
+  } else {
+      queryDatabaseAndSerializeResult(queryForMapStats, 'queryForMapStatsResult.json');
+  }
 }
 
-function queryWinrateOverTime()
-{
-    // this is for the line chart, data should look like this:
-    // data: [0.54,0.60,0.51,0.42],
-    // labels : [day1, ...]
-    queryDatabaseAndSerializeResult(queryForLineChart, 'queryForLineChartResult.json');
-
-  
+function queryWinrateOverTime() {
+  if (_filters && (Boolean(_filters.gameCount) || Boolean(_filters.sinceDate) || Boolean(_filters.mapFilter))) {
+      queryDatabaseWithFiltersAndSerializeResult(queryForLineChart, 'queryForLineChartResult.json', _filters);
+  } else {
+      queryDatabaseAndSerializeResult(queryForLineChart, 'queryForLineChartResult.json');
+  }
 }
 
-function queryHeroPerformancePerMap()
-{
-  queryDatabaseAndSerializeResult(queryForHeatmap, 'queryForHeatmapResult.json');
+function queryHeroPerformancePerMap() {
+  if (_filters && (Boolean(_filters.gameCount) || Boolean(_filters.sinceDate) || Boolean(_filters.mapFilter))) {
+      queryDatabaseWithFiltersAndSerializeResult(queryForHeatmap, 'queryForHeatmapResult.json', _filters);
+  } else {
+      queryDatabaseAndSerializeResult(queryForHeatmap, 'queryForHeatmapResult.json');
+  }
 }
 
-function queryRankedHeroes()
-{
-  
-  queryDatabaseAndSerializeResult(queryForRankedHeroes, "queryForRankedHeroesResult.json");
+function queryRankedHeroes() {
+  if (_filters && (Boolean(_filters.gameCount) || Boolean(_filters.sinceDate) || Boolean(_filters.mapFilter))) {
+      queryDatabaseWithFiltersAndSerializeResult(queryForRankedHeroes, "queryForRankedHeroesResult.json", _filters);
+  } else {
+      queryDatabaseAndSerializeResult(queryForRankedHeroes, "queryForRankedHeroesResult.json");
+  }
 }
 
-function queryRankedMaps()
-{
-  
-  queryDatabaseAndSerializeResult(queryForRankedMaps, "queryForRankedMapsResult.json");
+function queryRankedMaps() {
+  if (_filters && (Boolean(_filters.gameCount) || Boolean(_filters.sinceDate) || Boolean(_filters.mapFilter))) {
+      queryDatabaseWithFiltersAndSerializeResult(queryForRankedMaps, "queryForRankedMapsResult.json", _filters);
+  } else {
+      queryDatabaseAndSerializeResult(queryForRankedMaps, "queryForRankedMapsResult.json");
+  }
 }
 
-function queryNestedMap()
-{
-  queryDatabaseAndSerializeResult(queryForNestedMap, "queryForNestedMapResult.json");
+function queryNestedMap() {
+  if (_filters && (Boolean(_filters.gameCount) || Boolean(_filters.sinceDate) || Boolean(_filters.mapFilter))) {
+      queryDatabaseWithFiltersAndSerializeResult(queryForNestedMap, "queryForNestedMapResult.json", _filters);
+  } else {
+      queryDatabaseAndSerializeResult(queryForNestedMap, "queryForNestedMapResult.json");
+  }
 }
 
-function queryPartyWinrate()
-{
-  queryDatabaseAndSerializeResult(queryForPartyWinrate, "queryForPartyWinrateResult.json");
+function queryPartyWinrate() {
+  if (_filters && (Boolean(_filters.gameCount) || Boolean(_filters.sinceDate) || Boolean(_filters.mapFilter))) {
+      queryDatabaseWithFiltersAndSerializeResult(queryForPartyWinrate, "queryForPartyWinrateResult.json", _filters);
+  } else {
+      queryDatabaseAndSerializeResult(queryForPartyWinrate, "queryForPartyWinrateResult.json");
+  }
 }
+
+
 
 function resetDatabase()
 {

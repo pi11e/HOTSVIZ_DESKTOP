@@ -2,6 +2,20 @@ window.charts = [];
 const progressBar = document.getElementById("databaseProgressBar");
 let completedInsertions = 0;
 let peakInsertions = 0;
+const maps = [
+  "Alterac Pass",
+  "Battlefield of Eternity",
+  "Braxis Holdout",
+  "Cursed Hollow",
+  "Dragon Shire",
+  "Garden of Terror",
+  "Infernal Shrines",
+  "Sky Temple",
+  "Tomb of the Spider Queen",
+  "Towers of Doom",
+  "Volskaya Foundry"
+];
+
 
 
 document.addEventListener("DOMContentLoaded", async () => 
@@ -11,6 +25,18 @@ document.addEventListener("DOMContentLoaded", async () =>
     document.getElementById("openDialog").addEventListener("click", () => {
         window.electron.openDialog();
     });
+
+    // populate maps dropdown
+    const mapSelect = document.getElementById("map-filter");
+    mapSelect.innerHTML = `<option value="">All Maps</option>`; // Default option
+    console.log("maps array = " + maps)
+    maps.forEach(mapName => 
+      {
+        let option = document.createElement("option");
+        option.value = mapName; // Adjust key name based on DB
+        option.textContent = mapName;
+        mapSelect.appendChild(option);
+      });
 
     
 
@@ -64,8 +90,17 @@ document.addEventListener("DOMContentLoaded", async () =>
                 "partysizechart"
             ];
 
+                // reset existing charts and clear the charts array
+            window.charts.forEach(chart => chart.destroy());
+            window.charts = [];
+
+            
+
             // Loop through and create each chart
             chartNames.forEach(createChart);           
+
+
+            
         });
 
     
@@ -75,9 +110,7 @@ function createChart(chartName)
 {
     //console.log("creating chart " + chartName);
 
-    // reset existing charts and clear the charts array
-    window.charts.forEach(chart => chart.destroy());
-    window.charts = [];
+
 
     window.electron.getChartData(chartName).then(response => 
         {
@@ -104,6 +137,9 @@ function createChart(chartName)
                 var tealColor = 'rgba(0,128,128,0.3)';
 
                 var mapLabels = result.mapLabels;
+
+                
+
                 var heroLabels = result.heroLabels;
 
                 var matrixRowCount = mapLabels.length;
@@ -298,7 +334,7 @@ window.electron.onConvertReplaysDone((data) => {
 
 
 window.electron.onDatabaseProgress((activeInsertions) => {
-  console.log("Renderer received: onDatabaseProgress with active count =", activeInsertions);
+  //console.log("Renderer received: onDatabaseProgress with active count =", activeInsertions);
 
   // Update peakInsertions to reflect the highest count observed
   peakInsertions = Math.max(peakInsertions, activeInsertions);
@@ -313,4 +349,12 @@ window.electron.onDatabaseProgress((activeInsertions) => {
           peakInsertions = 0; // Reset for the next operation
       }, 500);
   }
+});
+
+document.getElementById("apply-filters").addEventListener("click", () => {
+  const gameCount = document.getElementById("game-count").value;
+  const sinceDate = document.getElementById("since-date").value;
+  const mapFilter = document.getElementById("map-filter").value;
+
+  window.electron.applyFilters(gameCount, sinceDate, mapFilter);
 });

@@ -2,9 +2,12 @@ const { app, BrowserWindow, dialog, ipcMain } = require('electron');
 const path = require('path');
 const { spawn } = require("child_process");
 
+const pLimit = require('p-limit').default;
+
 const fs = require('fs'); // File system module
 
 const hotsdata = require('./hotsviz_src/hotsdata.js');
+const hotsdb = require('./hotsviz_src/hotsdb.js');
 
 
 function createWindow() {
@@ -113,7 +116,8 @@ ipcMain.on("process-replays", () => {
 
 async function loadHotsDB() 
 {
-    const hotsdb = await import('./hotsviz_src/hotsdb.js');
+    // no need anymore - already importing at the top
+    
 
     const dataPath = "./data/";
     const dataPath_dist = "./resources/app/data/";
@@ -181,71 +185,106 @@ ipcMain.handle("get-chart-data", (event, config) =>
 
 // Function to process all .stormreplay files in a folder
 ipcMain.handle("convert-replays", async (_event, folderPath) => {
-    return new Promise((resolve) => {
-        fs.readdir(folderPath, (err, files) => {
-            if (err) {
-                console.error(`Error reading folder: ${err.message}`);
-                resolve({ success: false, message: "Failed to read folder." });
-                return;
+    try {
+        const files = await fs.promises.readdir(folderPath);
+        const stormReplays = files.filter(file => file.endsWith(".StormReplay"));
+        const totalReplays = stormReplays.length;
+
+        if (totalReplays === 0) {
+            console.log("No .StormReplay files found.");
+            return { success: false, message: "No replay files found." };
+        }
+
+        let newJsonCount = 0;
+        let processedCount = 0;
+
+        // Called when a replay finishes
+        function finalizeProcessing() {
+            processedCount++;
+            if (processedCount === totalReplays) {
+                const message = `Found ${totalReplays} replay files. Generated ${newJsonCount} new JSON files.`;
+                console.log(message);
+
+                BrowserWindow.getAllWindows().forEach(win =>
+                    win.webContents.send("convert-replays-done", { totalReplays, newJsonCount })
+                );
             }
+        }
 
-            const stormReplays = files.filter(file => file.endsWith(".StormReplay"));
-            const totalReplays = stormReplays.length;
-            let newJsonCount = 0; // Tracks how many new JSON files are created
+        // Called after each replay completes to update progress
+        function updateProgress(ratio) {
+            const percent = Math.round(ratio * 100);
+            console.log(`Progress: ${percent}%`);
+            BrowserWindow.getAllWindows().forEach(win =>
+                win.webContents.send("progress-update", percent)
+            );
+        }
 
-            if (totalReplays === 0) {
-                console.log("No .StormReplay files found.");
-                resolve({ success: false, message: "No replay files found." });
-                return;
-            }
+        // ✅ Await the async process to ensure completion before returning
+        await processReplays(stormReplays, folderPath, finalizeProcessing, updateProgress);
 
-            let processedCount = 0;
-            stormReplays.forEach((file) => {
-                const replayPath = path.join(folderPath, file);
-                const jsonPath = replayPath + ".json";
+        const message = `Found ${totalReplays} replay files. Generated ${newJsonCount} new JSON files.`;
+        return { success: true, message };
 
-                if (fs.existsSync(jsonPath)) {
-                    console.log(`Skipping: ${file} (JSON already exists)`);
-                } else {
-                    console.log(`Processing: ${file}`);
-                    newJsonCount++;
-
-                    const exePath = path.join(__dirname, "heroesDecode", "HeroesDecode.exe");
-                    const command = `"${exePath}" get-json --replay-path "${replayPath}" > "${jsonPath}"`;
-
-                    const child = spawn(command, { shell: true });
-
-                    child.on("close", (code) => {
-                        if (code !== 0) {
-                            console.error(`Error processing: ${file} (Exit code: ${code})`);
-                        }
-                        finalizeProcessing();
-                    });
-
-                    return;
-                }
-
-                finalizeProcessing();
-            });
-
-            function finalizeProcessing() {
-                processedCount++;
-                if (processedCount === totalReplays) {
-                    const message = `Found ${totalReplays} replay files. Generated ${newJsonCount} new JSON files.`;
-                    console.log(message);
-
-                    // Send the result to the renderer
-                    BrowserWindow.getAllWindows().forEach(win => win.webContents.send("convert-replays-done", {
-                        totalReplays,
-                        newJsonCount
-                    }));
-
-                    resolve({ success: true, message });
-                }
-            }
-        });
-    });
+    } catch (err) {
+        console.error(`Error during replay conversion: ${err.message}`);
+        return { success: false, message: "Failed to process replays." };
+    }
 });
+
+
+// AI-generated async function to introduce concurrency limit on replay processing. 
+// previously, the issue was how child_spawn would potentially launch thousands of child processes (one for each replay file)
+// which potentially killed the client PC through concurrency explosion
+async function processReplays(stormReplays, folderPath, finalizeProcessing, updateProgress) {
+  const exePath = path.join(__dirname, "heroesDecode", "HeroesDecode.exe");
+  const limit = pLimit(8); // <= adjust this to control concurrency (e.g. 4–12)
+
+  let newJsonCount = 0;
+  let completed = 0;
+  const total = stormReplays.length;
+
+  // Wrap processing logic into a function that returns a Promise
+  function processReplay(file) {
+    return new Promise((resolve) => {
+      const replayPath = path.join(folderPath, file);
+      const jsonPath = replayPath + ".json";
+
+      if (fs.existsSync(jsonPath)) {
+        console.log(`Skipping: ${file} (JSON already exists)`);
+        completed++;
+        updateProgress(completed / total);
+        finalizeProcessing();
+        return resolve();
+      }
+
+      console.log(`Processing: ${file}`);
+      newJsonCount++;
+
+      const command = `"${exePath}" get-json --replay-path "${replayPath}" > "${jsonPath}"`;
+      const child = spawn(command, { shell: true });
+
+      child.on("close", (code) => {
+        completed++;
+        updateProgress(completed / total);
+
+        if (code !== 0) {
+          console.error(`Error processing: ${file} (Exit code: ${code})`);
+        }
+
+        finalizeProcessing();
+        resolve();
+      });
+    });
+  }
+
+  // Schedule all tasks with concurrency limit
+  const tasks = stormReplays.map((file) => limit(() => processReplay(file)));
+
+  await Promise.all(tasks);
+
+  console.log(`✅ All done! Processed ${newJsonCount} new files.`);
+}
 
 
 ipcMain.on("database-processing-start", (event) => {
@@ -262,6 +301,26 @@ ipcMain.on("database-progress", (_event, count) => {
     //console.log("Forwarding event: database-progress with count = ", count); // Debug log
     BrowserWindow.getAllWindows().forEach(win => win.webContents.send("database-progress", count));
 });
+
+ipcMain.handle("apply-filters", (event, gameCount, sinceDate, mapFilter) => {
+    
+
+    
+    console.log("gamecount: " + gameCount + "; sinceDate: " + sinceDate + "; mapFilter: " + mapFilter);
+    
+    hotsdb.setFilters({gameCount, sinceDate, mapFilter});
+
+    /*
+    db.all(query, params, (err, rows) => {
+        if (err) {
+            event.reply("filter-results", { success: false, error: err.message });
+        } else {
+            event.reply("filter-results", { success: true, data: rows });
+        }
+    });
+    */
+});
+
 
 app.setPath('userData', path.join(app.getPath('appData'), 'HOTSVIZ'));
 
