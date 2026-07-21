@@ -103,6 +103,24 @@ document.addEventListener("DOMContentLoaded", async () =>
             
         });
 
+    // HANDLING APPLY FILTERS
+    document.getElementById("apply-filters").addEventListener("click", async () => {
+        const gameCount = document.getElementById("game-count").value;
+        const sinceDate = document.getElementById("since-date").value;
+        const mapFilter = document.getElementById("map-filter").value;
+
+        console.log("Applying filters - gameCount:", gameCount, "sinceDate:", sinceDate, "mapFilter:", mapFilter);
+        
+        // Send filters to main process
+        window.electron.applyFilters(gameCount, sinceDate, mapFilter);
+
+        // Give the backend a moment to process filters, then reload visualization
+        setTimeout(() => {
+            console.log("Reloading visualization with applied filters");
+            document.getElementById("reloadVisualization").click();
+        }, 500);
+    });
+
     
 });
 
@@ -181,8 +199,8 @@ function createChart(chartName)
                         return 'rgba(0,0,0,0.5)'
                       },
                       borderWidth: 1,
-                      width: ({chart}) => (chart.chartArea || {}).width / matrixColumnCount -1, // x axis ... that's amount of columns-1 ie heroes. magic number: 51 distinct heroes in the dataset (incl non SL games)
-                      height: ({chart}) =>(chart.chartArea || {}).height / matrixRowCount -1 // y axis ... that's amount of maps ie amount of objects in the dataset. magic number: 18 distinct maps in the dataset (incl non SL maps)
+                      width: ({chart}) => (chart.chartArea || {}).width / matrixColumnCount -1, // x axis ... that's amount of columns-1 ie heroes. magic number: 51 distinct heroes in the dataset[...]
+                      height: ({chart}) =>(chart.chartArea || {}).height / matrixRowCount -1 // y axis ... that's amount of maps ie amount of objects in the dataset. magic number: 18 distinct map[...]
                     }]
                   };
                   
@@ -348,13 +366,5 @@ window.electron.onDatabaseProgress((activeInsertions) => {
           progressBar.style.display = "none";
           peakInsertions = 0; // Reset for the next operation
       }, 500);
-  }
-});
-
-document.getElementById("apply-filters").addEventListener("click", () => {
-  const gameCount = document.getElementById("game-count").value;
-  const sinceDate = document.getElementById("since-date").value;
-  const mapFilter = document.getElementById("map-filter").value;
-
-  window.electron.applyFilters(gameCount, sinceDate, mapFilter);
+   }
 });
