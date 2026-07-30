@@ -1,22 +1,77 @@
 {
-  "name": "HOTSVIZ_Desktop",
-  "version": "1.0.0",
-  "main": "main.js",
+  "name": "hotsviz-codex",
+  "version": "0.2.4",
+  "private": true,
+  "description": "Local Heroes of the Storm replay analysis",
+  "main": "dist-electron/main/index.cjs",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "distribute": "npm run clean && electron-packager . HOTSVIZ-Desktop --platform=win32 --arch=x64 --out=dist --overwrite",
-    "launch": "npx electron .",
-    "clean": "rimraf ./data/*.json && type nul > ./data/data_path.cfg"
+    "dev": "node scripts/dev.mjs",
+    "build": "vite build && vite build --config vite.config.electron.ts",
+    "build:electron": "vite build --config vite.config.electron.ts",
+    "type-check": "vue-tsc --noEmit",
+    "lint": "eslint . --ext .ts,.vue,.mjs",
+    "start": "electron .",
+    "bump": "node scripts/bump-version.mjs",
+    "build-parser": "node scripts/build-parser.mjs",
+    "deploy": "node scripts/deploy.mjs",
+    "dist": "npm run bump && npm run build && electron-builder",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
-    "chartjs-chart-matrix": "^2.0.1",
-    "electron": "^35.0.1",
-    "p-limit": "^7.1.1",
-    "rimraf": "^3.0.2",
-    "sqlite3": "^5.1.7"
+    "chart.js": "^4.5.1",
+    "chartjs-chart-matrix": "^3.0.5",
+    "pinia": "^2.1.7",
+    "electron-updater": "^6.3.9",
+    "sqlite3": "^5.1.7",
+    "vue": "^3.4.31"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "@vitejs/plugin-vue": "^5.1.2",
+    "@vue/test-utils": "^2.4.11",
+    "electron": "^27.3.11",
+    "electron-builder": "^26.15.3",
+    "eslint": "^8.57.0",
+    "eslint-plugin-vue": "^9.27.0",
+    "happy-dom": "^20.11.1",
+    "typescript": "^5.5.3",
+    "vite": "^5.3.5",
+    "vitest": "^4.1.10",
+    "vue-tsc": "^2.0.24"
+  },
+  "build": {
+    "appId": "com.hotscodex.hotsviz",
+    "productName": "HOTSVIZ",
+    "artifactName": "HOTSVIZ_Setup.${ext}",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist-electron/**/*",
+      "dist-web/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/parser",
+        "to": "parser"
+      }
+    ],
+    "win": {
+      "target": "nsis"
+    },
+    "nsis": {
+      "differential": true,
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    },
+    "publish": [{
+      "provider": "github",
+      "owner": "pi11e",
+      "repo": "HOTSVIZ_Desktop"
+    }]
   }
 }

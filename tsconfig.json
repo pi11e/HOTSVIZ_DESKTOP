@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "noEmit": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "types": ["node"]
+  },
+  "include": ["src", "vite.config.ts", "vite.config.electron.ts", "vitest.config.ts"]
+}
+
