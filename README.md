@@ -6,7 +6,7 @@ So I made a tool that looks at local `.StormReplay` files and turns them into pe
 
 HOTSVIZ runs entirely on your machine. No telemetry. No external network calls. No data collected. Your replays and your stats stay on your machine — always.
 
-[![Discord](https://img.shields.io/discord/community)](https://discord.gg/n3VcDcJR6k)
+[![Discord](https://img.shields.io/badge/Discord-Join%20Us-5865F2?logo=discord&logoColor=white)](https://discord.gg/n3VcDcJR6k)
 [![GitHub](https://img.shields.io/badge/GitHub-HOTSVIZ_Desktop-blue)](https://github.com/pi11e/HOTSVIZ_Desktop)
 [![GitHub Release](https://img.shields.io/github/v/release/pi11e/HOTSVIZ_Desktop)](https://github.com/pi11e/HOTSVIZ_Desktop/releases)
 
@@ -15,19 +15,20 @@ HOTSVIZ runs entirely on your machine. No telemetry. No external network calls. 
 ---
 
 ## What it does
-**Multi-account.** Play on more than one HotS account? Import replays from all of them and view any subset — per-owner checkboxes in the replay library filter the entire dashboard at query time, with no re-import and no deleted data.
 
 **Personal replay analysis.** Import your own `.StormReplay` files and get stats that are actually about you — win rate, most-played hero, hero and map performance, recent trends, party-size breakdowns, and a win-rate momentum chart. Everything is filtered instantly by game mode, hero, map, date range, or patch build.
 
-**Coaching Corner.** A short summary of what's worth your attention right now — recent vs overall form, and targeted scope insights when you drill into a single hero or map.
-
-**Hero deep-dives.** Click any hero to see its full profile: aggregate win rate, per-map breakdown, and your best synergies and which hero spells your doom.
+**Multi-account.** Play on more than one HotS account? Import replays from all of them and view any subset — per-owner checkboxes in the replay library filter the entire dashboard at query time, with no re-import and no deleted data.
 
 **Draft helper.** Get draft-time recommendations based on *your* win rate, recent form, and statistical confidence. Pick a map, fill in your roster, and it ranks heroes for you with role-conflict awareness (e.g. lower score for tank pick recommendations when a tank has already been picked).
 
-**Hero × map heatmap.** A visual grid showing where you win and where you lose across every hero and map combination.
-
 **Match detail.** See exactly how your games played out — both teams' stats, talents, and draft order, all in one view. Also includes party indicators so you can see who was in a party (even if they were on the other side).
+
+**Hero deep-dives.** Click any hero to see its full profile: aggregate win rate, per-map breakdown, and your best synergies and which hero spells your doom.
+
+**Coaching Corner.** A short summary of what's worth your attention right now — recent vs overall form, and targeted scope insights when you drill into a single hero or map.
+
+**Hero × map heatmap.** A visual grid showing where you win and where you lose across every hero and map combination.
 
 ---
 
@@ -52,11 +53,19 @@ HOTSVIZ runs entirely on your machine. No telemetry. No external network calls. 
 
 ## Getting started
 
-1. **Download** the latest release from [GitHub Releases](https://github.com/pi11e/HOTSVIZ_Desktop/releases).
+1. **Download** the latest release from [GitHub Releases](https://github.com/pi11e/HOTSVIZ_Desktop/releases), or build it yourself (`npm install && npm run dev`).
 2. **Select your replays folder** — the `Replays\Multiplayer` directory where Heroes of the Storm saves `.StormReplay` files (usually in your Documents folder).
 3. **Import and explore** — fast import skips already-imported replays; clean import rebuilds from scratch. Play on multiple accounts? They'll show up as checkboxes in the replay library so you can filter the whole dashboard per owner. Filter by game mode, hero, map, date, or patch build to focus your analysis.
 
 All your data stays on your machine. Nothing is uploaded, sent over the network, or stored anywhere else.
+
+---
+
+## SmartScreen notice
+
+The installer is not code-signed. Windows SmartScreen may show a warning when you download it. 
+Click **More info → Run anyway** to proceed. The app itself is safe — it makes no network calls outside of the auto-updater and collects no data.
+You can opt-out of updates if you prefer.
 
 ---
 
@@ -78,38 +87,12 @@ HOTSVIZ is free. If you enjoy it and want to support development, you can [buy m
 - Replay decoding uses [HeroesParser](https://github.com/HeroesToolChest/Heroes.StormReplayParser), a .NET parser bundled as a self-contained binary
 - Data stored locally in SQLite (path varies by platform — see [ARCHITECTURE.md](ARCHITECTURE.md))
 
-
-### Build from source
-
-```powershell
-npm install
-npm run dev
-```
-
-### Commands
-
-```powershell
-npm run dev            # Vite + Electron dev environment (port-independent)
-npm run build          # full production build (renderer + electron)
-npm run build-parser   # build HeroesParser.exe and copy to resources/parser/
-npm run dist           # build + package as Windows installer
-npm run test           # vitest run
-npm run deploy         # bump → build → release notes → tag → publish to HOTSVIZ_Desktop
-```
-
 ---
 
 ## Windows-only disclaimer
 
 HOTSVIZ is a Windows-only application. It is not supported on macOS, Linux, or any other platform.
 A Mac build may be feasible in the future.
-
----
-
-## SmartScreen notice
-
-The installer is not code-signed. Windows SmartScreen may show a warning when you download it. 
-Click **More info → Run anyway** to proceed. The app itself is safe — it makes no network calls outside of the auto-updater and collects no data.
 
 ---
 
