@@ -89,7 +89,7 @@ HOTSVIZ is free. If you enjoy it and want to support development, you can [buy m
 
 ---
 
-## Windows-only disclaimer
+## Platforms
 
 HOTSVIZ is a Windows-only application. It is not supported on macOS, Linux, or any other platform.
 A Mac build may be feasible in the future.
