@@ -52,7 +52,7 @@ HOTSVIZ runs entirely on your machine. No telemetry. No external network calls. 
 
 ## Getting started
 
-1. **Download** the latest release from [GitHub Releases](https://github.com/pi11e/HOTSVIZ_Desktop/releases), or build it yourself (`npm install && npm run dev`).
+1. **Download** the latest release from [GitHub Releases](https://github.com/pi11e/HOTSVIZ_Desktop/releases).
 2. **Select your replays folder** — the `Replays\Multiplayer` directory where Heroes of the Storm saves `.StormReplay` files (usually in your Documents folder).
 3. **Import and explore** — fast import skips already-imported replays; clean import rebuilds from scratch. Play on multiple accounts? They'll show up as checkboxes in the replay library so you can filter the whole dashboard per owner. Filter by game mode, hero, map, date, or patch build to focus your analysis.
 
