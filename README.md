@@ -1,10 +1,8 @@
 # HOTSVIZ
 
-I built this for myself originally. While global stats are available online, I thought why wouldn't I just run stats analysis on my own personal files? 
-I wanted to actually understand my own performance — not some global average, not a community leaderboard, just *me*: how I play, what I'm good at, where I keep losing. 
-So I made a tool that looks at local `.StormReplay` files and turns them into personal stats you can actually use to improve.
-
-HOTSVIZ runs entirely on your machine. No telemetry. No external network calls. No data collected. Your replays and your stats stay on your machine — always.
+HOTSVIZ loads your own replay files and analyzes your personal performance based on the stats extracted from *your* games. 
+It suggests what works and doesn't, and provides draft insights based on how you play. 
+It also delivers various charts to highlight useful information based on your match history.
 
 [![Discord](https://img.shields.io/badge/Discord-Join%20Us-5865F2?logo=discord&logoColor=white)](https://discord.gg/n3VcDcJR6k)
 [![GitHub](https://img.shields.io/badge/GitHub-HOTSVIZ_Desktop-blue)](https://github.com/pi11e/HOTSVIZ_Desktop)
@@ -13,7 +11,7 @@ HOTSVIZ runs entirely on your machine. No telemetry. No external network calls. 
 **Download the latest release** from [GitHub Releases](https://github.com/pi11e/HOTSVIZ_Desktop/releases) — it's free. Windows only.
 
 <details>
-  <summary><strong>See the whole app — every panel, one look</strong></summary>
+  <summary><strong>Click here to preview the entire app in one screen.</strong></summary>
   <img alt="HOTSVIZ full app tour" src="resources/screenshots/app-tour.png">
 </details>
 
