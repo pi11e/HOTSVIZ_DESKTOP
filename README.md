@@ -12,6 +12,11 @@ HOTSVIZ runs entirely on your machine. No telemetry. No external network calls. 
 
 **Download the latest release** from [GitHub Releases](https://github.com/pi11e/HOTSVIZ_Desktop/releases) — it's free. Windows only.
 
+<details>
+  <summary><strong>See the whole app — every panel, one look</strong></summary>
+  <img alt="HOTSVIZ full app tour" src="resources/screenshots/app-tour.png">
+</details>
+
 ---
 
 ## What it does
@@ -89,7 +94,7 @@ HOTSVIZ is free. If you enjoy it and want to support development, you can [buy m
 
 ---
 
-## Platforms
+## Supported Platforms
 
 HOTSVIZ is a Windows-only application. It is not supported on macOS, Linux, or any other platform.
 A Mac build may be feasible in the future.
